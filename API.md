@@ -6,13 +6,13 @@
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=QTSqts1030+
+DB_PASSWORD=your-db-password
 DB_NAME=study_management
 
 JWT_SECRET=please_change_me
 JWT_EXPIRES=7d
 
-DEEPSEEK_API_KEY=sk-9dfefa695d064f3983fbf2ff09f683c8
+DEEPSEEK_API_KEY=your-deepseek-key
 DEEPSEEK_API_BASE=https://api.deepseek.com
 ```
 - 统一返回：`{ code, message, data }`
