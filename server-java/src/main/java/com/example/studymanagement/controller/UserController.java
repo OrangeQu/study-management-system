@@ -78,7 +78,7 @@ public class UserController {
     }
 
     @DeleteMapping("/devices/{id}")
-    public ResponseEntity<?> removeDevice(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    public ResponseEntity<?> removeDevice(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
         loginDeviceService.removeDevice(user.getId(), id);
         return ResponseEntity.ok(Map.of("code", 0, "message", "ok", "data", true));
     }

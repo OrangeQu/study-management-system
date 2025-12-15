@@ -58,7 +58,7 @@ public class GradeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable Long id, @RequestBody Grade req) {
+    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable("id") Long id, @RequestBody Grade req) {
         Grade g = gradeRepository.findById(id).orElseThrow();
         if (!g.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限", "data", null));
@@ -71,7 +71,7 @@ public class GradeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
         gradeRepository.findById(id)
             .filter(g -> g.getUserId().equals(user.getId()))
             .ifPresent(gradeRepository::delete);

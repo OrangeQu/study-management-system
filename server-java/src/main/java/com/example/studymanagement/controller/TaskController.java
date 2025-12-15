@@ -78,7 +78,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable Long id, @RequestBody Task req) {
+    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable("id") Long id, @RequestBody Task req) {
         Task task = taskRepository.findById(id).orElseThrow();
         if (!task.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限", "data", null));
@@ -96,7 +96,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> patchStatus(@AuthenticationPrincipal User user, @PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> patchStatus(@AuthenticationPrincipal User user, @PathVariable("id") Long id, @RequestBody Map<String, Object> body) {
         Task task = taskRepository.findById(id).orElseThrow();
         if (!task.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限", "data", null));
@@ -111,7 +111,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
         taskRepository.findById(id)
             .filter(task -> task.getUserId().equals(user.getId()))
             .ifPresent(taskRepository::delete);

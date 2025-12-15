@@ -35,7 +35,7 @@ public class PlanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable Long id, @RequestBody Plan req) {
+    public ResponseEntity<?> update(@AuthenticationPrincipal User user, @PathVariable("id") Long id, @RequestBody Plan req) {
         Plan plan = planRepository.findById(id).orElseThrow();
         if (!plan.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限", "data", null));
@@ -47,7 +47,7 @@ public class PlanController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> patchStatus(@AuthenticationPrincipal User user, @PathVariable Long id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> patchStatus(@AuthenticationPrincipal User user, @PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         Plan plan = planRepository.findById(id).orElseThrow();
         if (!plan.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限", "data", null));
@@ -58,7 +58,7 @@ public class PlanController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    public ResponseEntity<?> delete(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
         Plan plan = planRepository.findById(id).orElse(null);
         if (plan != null && plan.getUserId().equals(user.getId())) {
             planRepository.deleteById(id);
