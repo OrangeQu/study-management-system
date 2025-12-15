@@ -68,18 +68,18 @@
                   <div class="time-circle">
                     <el-icon><Clock /></el-icon>
                   </div>
-                  <div class="time-range">{{ plan.time }}</div>
+                  <div class="time-range">{{ plan.displayTime }}</div>
                 </div>
                 <div class="plan-content">
-                  <div class="plan-title">{{ plan.title }}</div>
-                  <div class="plan-course">{{ plan.course }}</div>
+                  <div class="plan-title">{{ plan.displayTitle }}</div>
+                  <div class="plan-course">{{ plan.displayCourse }}</div>
                 </div>
                 <div class="plan-status">
                   <el-tag 
-                    :type="plan.status === '已完成' ? 'success' : plan.status === '进行中' ? 'warning' : 'info'" 
+                    :type="plan.displayStatus === '已完成' ? 'success' : plan.displayStatus === '进行中' ? 'warning' : 'info'" 
                     size="small"
                   >
-                    {{ plan.status }}
+                    {{ plan.displayStatus }}
                   </el-tag>
                 </div>
               </div>
@@ -344,14 +344,23 @@ const currentWeekday = computed(() => {
 })
 
 const dashboardTasks = computed(() => {
-  const today = dayjs().format('YYYY-MM-DD')
+  const now = dayjs()
+  const today = now.format('YYYY-MM-DD')
   const todayTasks = tasks.value.filter(task => {
     if (!task.deadline) return false
     const taskDate = dayjs(task.deadline).format('YYYY-MM-DD')
     return taskDate === today
   })
+  const upcomingTasks = tasks.value.filter(task => {
+    if (!task.deadline) return false
+    const diffHours = dayjs(task.deadline).diff(now, 'hour')
+    return diffHours >= 0 && diffHours <= 24
+  })
+  const source = todayTasks.length > 0
+    ? todayTasks
+    : (upcomingTasks.length > 0 ? upcomingTasks : tasks.value)
   const priorityOrder = { 1: 1, 2: 2, 3: 3 }
-  return todayTasks
+  return source
     .sort((a, b) => (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3))
     .sort((a, b) => Number(a.completed) - Number(b.completed))
     .slice(0, 3)
@@ -363,6 +372,15 @@ const dashboardPlans = computed(() => {
     .filter(plan => plan.date && dayjs(plan.date).format('YYYY-MM-DD') === today)
     .sort((a, b) => (a.time_start || '').localeCompare(b.time_start || ''))
     .slice(0, 4)
+    .map(plan => ({
+      ...plan,
+      displayTime: plan.time_start && plan.time_end
+        ? `${plan.time_start} - ${plan.time_end}`
+        : (plan.time || ''),
+      displayTitle: plan.task_title || plan.title || '自由学习',
+      displayCourse: plan.course || plan.description || '',
+      displayStatus: plan.status || '未开始'
+    }))
 })
 
 const urgentDeadlines = computed(() => {

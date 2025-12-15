@@ -1,6 +1,8 @@
 package com.example.studymanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ public class Task {
     private String description;
     private String type;
     private Integer priority;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime deadline;
     private String course;
     private String status; // todo/doing/done

@@ -25,15 +25,15 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<?> list(
         @AuthenticationPrincipal User user,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int pageSize,
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) Integer priority,
-        @RequestParam(required = false) String type,
-        @RequestParam(required = false) String keyword,
-        @RequestParam(required = false) String date,
-        @RequestParam(required = false) String startDate,
-        @RequestParam(required = false) String endDate
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "pageSize", defaultValue = "20") int pageSize,
+        @RequestParam(name = "status", required = false) String status,
+        @RequestParam(name = "priority", required = false) Integer priority,
+        @RequestParam(name = "type", required = false) String type,
+        @RequestParam(name = "keyword", required = false) String keyword,
+        @RequestParam(name = "date", required = false) String date,
+        @RequestParam(name = "startDate", required = false) String startDate,
+        @RequestParam(name = "endDate", required = false) String endDate
     ) {
         List<Task> tasks = taskRepository.findByUserId(user.getId());
         LocalDate filterDate = parseDate(date);
@@ -51,7 +51,8 @@ public class TaskController {
             .sorted(Comparator.comparing(Task::getDeadline, Comparator.nullsLast(LocalDateTime::compareTo)))
             .collect(Collectors.toList());
 
-        int fromIndex = Math.min(page * pageSize, filtered.size());
+        int pageIndex = Math.max(page - 1, 0);
+        int fromIndex = Math.min(pageIndex * pageSize, filtered.size());
         int toIndex = Math.min(fromIndex + pageSize, filtered.size());
         List<Task> pageList = filtered.subList(fromIndex, toIndex);
 

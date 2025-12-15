@@ -33,7 +33,7 @@ public class DataController {
 
     @GetMapping("/export")
     public ResponseEntity<ByteArrayResource> export(@AuthenticationPrincipal User user,
-                                                    @RequestParam(defaultValue = "all") String type) throws Exception {
+                                                    @RequestParam(name = "type", defaultValue = "all") String type) throws Exception {
         Map<String, Object> payload = new HashMap<>();
         if ("all".equalsIgnoreCase(type) || "tasks".equalsIgnoreCase(type)) {
             payload.put("tasks", taskRepository.findByUserId(user.getId()));
@@ -64,7 +64,7 @@ public class DataController {
 
     @DeleteMapping("/history")
     public ResponseEntity<?> clearHistory(@AuthenticationPrincipal User user,
-                                          @RequestParam(defaultValue = "study") String type) {
+                                          @RequestParam(name = "type", defaultValue = "study") String type) {
         int cleared;
         if ("tasks".equalsIgnoreCase(type)) {
             List<com.example.studymanagement.model.Task> doneTasks = taskRepository.findByUserIdAndCompletedIsTrue(user.getId());

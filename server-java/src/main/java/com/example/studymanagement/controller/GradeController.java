@@ -30,18 +30,18 @@ public class GradeController {
     @GetMapping
     public ResponseEntity<?> list(
         @AuthenticationPrincipal User user,
-        @RequestParam(required = false) String semester,
-        @RequestParam(required = false) String academicYear,
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) String courseType,
-        @RequestParam(required = false) Double creditMin,
-        @RequestParam(required = false) Double creditMax,
-        @RequestParam(required = false) Double scoreMin,
-        @RequestParam(required = false) Double scoreMax,
-        @RequestParam(required = false) Double gpaMin,
-        @RequestParam(required = false) Double gpaMax,
-        @RequestParam(required = false) String keyword,
-        @RequestParam(required = false) List<Long> ids
+        @RequestParam(name = "semester", required = false) String semester,
+        @RequestParam(name = "academicYear", required = false) String academicYear,
+        @RequestParam(name = "status", required = false) String status,
+        @RequestParam(name = "courseType", required = false) String courseType,
+        @RequestParam(name = "creditMin", required = false) Double creditMin,
+        @RequestParam(name = "creditMax", required = false) Double creditMax,
+        @RequestParam(name = "scoreMin", required = false) Double scoreMin,
+        @RequestParam(name = "scoreMax", required = false) Double scoreMax,
+        @RequestParam(name = "gpaMin", required = false) Double gpaMin,
+        @RequestParam(name = "gpaMax", required = false) Double gpaMax,
+        @RequestParam(name = "keyword", required = false) String keyword,
+        @RequestParam(name = "ids", required = false) List<Long> ids
     ) {
         List<Grade> list = filterGrades(user.getId(), semester, academicYear, translateStatus(status), courseType,
             creditMin, creditMax, scoreMin, scoreMax, gpaMin, gpaMax, keyword, ids);
@@ -128,8 +128,8 @@ public class GradeController {
     @GetMapping("/export")
     public ResponseEntity<ByteArrayResource> export(
         @AuthenticationPrincipal User user,
-        @RequestParam(defaultValue = "all") String type,
-        @RequestParam(required = false) List<Long> ids
+        @RequestParam(name = "type", defaultValue = "all") String type,
+        @RequestParam(name = "ids", required = false) List<Long> ids
     ) {
         List<Grade> list = "selected".equalsIgnoreCase(type) && ids != null
             ? filterGrades(user.getId(), null, null, null, null, null, null, null, null, null, null, null, ids)

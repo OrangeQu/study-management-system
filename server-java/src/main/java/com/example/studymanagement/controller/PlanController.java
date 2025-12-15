@@ -20,7 +20,7 @@ public class PlanController {
     private final PlanRepository planRepository;
 
     @GetMapping
-    public ResponseEntity<?> list(@AuthenticationPrincipal User user, @RequestParam String date) {
+    public ResponseEntity<?> list(@AuthenticationPrincipal User user, @RequestParam(name = "date") String date) {
         LocalDate d = LocalDate.parse(date);
         List<Plan> list = planRepository.findByUserIdAndDate(user.getId(), d);
         return ResponseEntity.ok(Map.of("code", 0, "message", "ok", "data", list));
