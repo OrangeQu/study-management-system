@@ -1,14 +1,14 @@
-﻿<template>
+<template>
   <div class="grade-filter">
     <div class="filter-row">
+      <!-- 学期筛�?-->
       <div class="filter-group">
         <span class="filter-label">学期:</span>
-        <el-select
-          v-model="filters.semester"
-          placeholder="请选择学期"
+        <el-select 
+          v-model="filters.semester" 
+          placeholder="选择学期" 
           clearable
-          filterable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option
@@ -19,14 +19,15 @@
           />
         </el-select>
       </div>
+      
+      <!-- 学年筛�?-->
       <div class="filter-group">
         <span class="filter-label">学年:</span>
-        <el-select
-          v-model="filters.academicYear"
-          placeholder="请选择学年"
+        <el-select 
+          v-model="filters.academicYear" 
+          placeholder="选择学年" 
           clearable
-          filterable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option
@@ -37,13 +38,15 @@
           />
         </el-select>
       </div>
+      
+      <!-- 状态筛�?-->
       <div class="filter-group">
-        <span class="filter-label">状态:</span>
-        <el-select
-          v-model="filters.status"
-          placeholder="请选择状态"
+        <span class="filter-label">状�?</span>
+        <el-select 
+          v-model="filters.status" 
+          placeholder="选择状�? 
           clearable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option label="全部" value="" />
@@ -51,31 +54,34 @@
           <el-option label="未通过" value="failed" />
         </el-select>
       </div>
+      
+      <!-- 课程类型 -->
       <div class="filter-group">
         <span class="filter-label">类型:</span>
-        <el-select
-          v-model="filters.courseType"
-          placeholder="课程类型"
+        <el-select 
+          v-model="filters.courseType" 
+          placeholder="课程类型" 
           clearable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option label="全部" value="" />
-          <el-option label="必修" value="required" />
-          <el-option label="选修" value="elective" />
-          <el-option label="通识" value="general" />
+          <el-option label="必修�? value="required" />
+          <el-option label="选修�? value="elective" />
+          <el-option label="通识�? value="general" />
         </el-select>
       </div>
     </div>
-
+    
     <div class="filter-row">
+      <!-- 学分范围 -->
       <div class="filter-group">
         <span class="filter-label">学分:</span>
-        <el-select
-          v-model="filters.creditRange"
-          placeholder="学分范围"
+        <el-select 
+          v-model="filters.creditRange" 
+          placeholder="学分范围" 
           clearable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option label="全部" value="" />
@@ -84,30 +90,34 @@
           <el-option label="4学分以上" value="4+" />
         </el-select>
       </div>
+      
+      <!-- 成绩范围 -->
       <div class="filter-group">
         <span class="filter-label">成绩:</span>
-        <el-select
-          v-model="filters.scoreRange"
-          placeholder="成绩范围"
+        <el-select 
+          v-model="filters.scoreRange" 
+          placeholder="成绩范围" 
           clearable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option label="全部" value="" />
-          <el-option label="90 分及以上" value="90-100" />
-          <el-option label="80-89 分" value="80-89" />
-          <el-option label="70-79 分" value="70-79" />
-          <el-option label="60-69 分" value="60-69" />
-          <el-option label="60 分以下" value="0-59" />
+          <el-option label="90分以�? value="90-100" />
+          <el-option label="80-89�? value="80-89" />
+          <el-option label="70-79�? value="70-79" />
+          <el-option label="60-69�? value="60-69" />
+          <el-option label="60分以�? value="0-59" />
         </el-select>
       </div>
+      
+      <!-- 绩点范围 -->
       <div class="filter-group">
         <span class="filter-label">绩点:</span>
-        <el-select
-          v-model="filters.gpaRange"
-          placeholder="绩点范围"
+        <el-select 
+          v-model="filters.gpaRange" 
+          placeholder="绩点范围" 
           clearable
-          class="filter-select"
+          size="small"
           @change="handleFilterChange"
         >
           <el-option label="全部" value="" />
@@ -115,15 +125,27 @@
           <el-option label="3.0-3.4" value="3.0-3.4" />
           <el-option label="2.5-2.9" value="2.5-2.9" />
           <el-option label="2.0-2.4" value="2.0-2.4" />
-          <el-option label="2.0 以下" value="0-1.9" />
+          <el-option label="2.0以下" value="0-1.9" />
         </el-select>
       </div>
+      
+      <!-- 操作按钮 -->
       <div class="filter-actions">
-        <el-button type="text" size="small" @click="resetFilters" :icon="Refresh">
+        <el-button 
+          type="text" 
+          size="small" 
+          @click="resetFilters"
+          :icon="Refresh"
+        >
           重置
         </el-button>
-        <el-button type="primary" size="small" @click="handleFilterChange" :icon="Search">
-          筛选
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="handleFilterChange"
+          :icon="Search"
+        >
+          筛�?
         </el-button>
       </div>
     </div>
@@ -135,6 +157,7 @@ import { ref, watch, computed } from 'vue'
 import { Search, Refresh } from '@element-plus/icons-vue'
 
 const props = defineProps({
+  // 选项数据
   semesters: {
     type: Array,
     default: () => []
@@ -143,6 +166,7 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  // 初始筛选�?
   initialFilters: {
     type: Object,
     default: () => ({})
@@ -151,6 +175,7 @@ const props = defineProps({
 
 const emit = defineEmits(['filter-change'])
 
+// 筛选条�?
 const filters = ref({
   semester: '',
   academicYear: '',
@@ -162,6 +187,7 @@ const filters = ref({
   ...props.initialFilters
 })
 
+// 计算选项
 const semesterOptions = computed(() => {
   return [...new Set(props.semesters)].sort().reverse()
 })
@@ -170,6 +196,7 @@ const academicYearOptions = computed(() => {
   return [...new Set(props.academicYears)].sort().reverse()
 })
 
+// 方法
 const handleFilterChange = () => {
   emit('filter-change', filters.value)
 }
@@ -187,10 +214,12 @@ const resetFilters = () => {
   emit('filter-change', filters.value)
 }
 
+// 监听初始值变�?
 watch(() => props.initialFilters, (newFilters) => {
   filters.value = { ...filters.value, ...newFilters }
 }, { deep: true })
 
+// 暴露方法
 defineExpose({
   getFilters: () => filters.value,
   resetFilters
@@ -228,10 +257,6 @@ defineExpose({
   white-space: nowrap;
 }
 
-.filter-select {
-  min-width: 180px;
-}
-
 .filter-actions {
   margin-left: auto;
   display: flex;
@@ -239,11 +264,13 @@ defineExpose({
   align-items: center;
 }
 
+/* 响应式设�?*/
 @media (max-width: 992px) {
   .filter-row {
     flex-wrap: wrap;
     gap: 10px;
   }
+  
   .filter-group {
     flex: 1;
     min-width: 150px;

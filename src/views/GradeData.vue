@@ -1,4 +1,3 @@
-
 <template>
   <div class="grade-data-page">
     <div class="page-header">
@@ -46,7 +45,7 @@
           :icon-color="getGpaColor(currentSemesterGPA)"
           :tag="currentSemester"
         />
-        
+
         <GpaStats
           title="累计 GPA"
           :value="totalGPA"
@@ -55,7 +54,7 @@
           :icon-color="getGpaColor(totalGPA)"
           :sub-info="`课程数：${totalCourses}`"
         />
-        
+
         <GpaStats
           title="学分完成情况"
           :value="passedCredits"
@@ -68,7 +67,7 @@
           :progress-total="totalCredits"
           :progress-color="getProgressColor(creditProgress)"
         />
-        
+
         <GpaStats
           title="通过率"
           :value="passRate"
@@ -91,7 +90,7 @@
           <h3>GPA 趋势分析</h3>
         </div>
       </div>
-      
+
       <GpaTrendChart
         :title="'学期 GPA 趋势'"
         :gpa-data="gpaTrendData"
@@ -131,6 +130,7 @@
           :show-actions="true"
           :show-pagination="true"
           :page-size="pageSize"
+          :default-sort="{ prop: 'semester', order: 'descending' }"
           @edit="handleEditGrade"
           @delete="handleDeleteGrade"
           @add="showAddDialog"
@@ -149,27 +149,30 @@
                 clearable
                 @input="handleSearch"
               />
-              <el-select 
-                v-model="tableSort" 
+              <el-select
+                v-model="tableSort"
                 placeholder="排序方式"
                 size="small"
-                style="width: 150px"
+                style="width: 180px"
+                @change="handleSortChange"
               >
                 <el-option label="按学期降序" value="semester_desc" />
                 <el-option label="按学期升序" value="semester_asc" />
                 <el-option label="按成绩降序" value="score_desc" />
+                <el-option label="按成绩升序" value="score_asc" />
                 <el-option label="按 GPA 降序" value="gpa_desc" />
+                <el-option label="按 GPA 升序" value="gpa_asc" />
               </el-select>
             </div>
             <div class="toolbar-right">
-              <el-button 
-                type="text" 
-                size="small" 
+              <el-button
+                type="text"
+                size="small"
                 @click="exportSelected"
                 :disabled="selectedCount === 0"
                 :icon="Document"
               >
-                导出已选 ({{ selectedCount }})
+                导出已选({{ selectedCount }})
               </el-button>
             </div>
           </template>
@@ -183,31 +186,31 @@
       width="500px"
       @close="resetGradeForm"
     >
-      <el-form 
-        ref="gradeFormRef" 
-        :model="gradeForm" 
-        :rules="gradeFormRules" 
+      <el-form
+        ref="gradeFormRef"
+        :model="gradeForm"
+        :rules="gradeFormRules"
         label-width="100px"
       >
         <el-form-item label="课程名称" prop="course_name">
-          <el-input 
-            v-model="gradeForm.course_name" 
+          <el-input
+            v-model="gradeForm.course_name"
             placeholder="请输入课程名称"
           />
         </el-form-item>
 
         <el-form-item label="课程代码" prop="course_code">
-          <el-input 
-            v-model="gradeForm.course_code" 
+          <el-input
+            v-model="gradeForm.course_code"
             placeholder="如：CS101"
           />
         </el-form-item>
 
         <el-form-item label="学分" prop="credit">
-          <el-input-number 
-            v-model="gradeForm.credit" 
-            :min="0.5" 
-            :max="10" 
+          <el-input-number
+            v-model="gradeForm.credit"
+            :min="0.5"
+            :max="10"
             :step="0.5"
             controls-position="right"
             style="width: 100%"
@@ -215,10 +218,10 @@
         </el-form-item>
 
         <el-form-item label="成绩" prop="score">
-          <el-input-number 
-            v-model="gradeForm.score" 
-            :min="0" 
-            :max="100" 
+          <el-input-number
+            v-model="gradeForm.score"
+            :min="0"
+            :max="100"
             :step="0.5"
             controls-position="right"
             style="width: 100%"
@@ -228,11 +231,11 @@
         </el-form-item>
 
         <el-form-item label="GPA" prop="grade_point">
-          <el-input-number 
-            v-model="gradeForm.grade_point" 
-            :min="0" 
-            :max="4.0" 
-            :step="0.01"
+          <el-input-number
+            v-model="gradeForm.grade_point"
+            :min="0"
+            :max="5"
+            :step="0.1"
             :precision="2"
             controls-position="right"
             style="width: 100%"
@@ -241,8 +244,8 @@
         </el-form-item>
 
         <el-form-item label="课程类型" prop="course_type">
-          <el-select 
-            v-model="gradeForm.course_type" 
+          <el-select
+            v-model="gradeForm.course_type"
             placeholder="请选择课程类型"
             style="width: 100%"
           >
@@ -254,27 +257,27 @@
         </el-form-item>
 
         <el-form-item label="学期" prop="semester">
-          <el-select 
-            v-model="gradeForm.semester" 
+          <el-select
+            v-model="gradeForm.semester"
             placeholder="请选择或输入学期"
             style="width: 100%"
             filterable
             allow-create
             default-first-option
           >
-            <el-option 
-              v-for="semester in availableSemesters" 
-              :key="semester" 
-              :label="semester" 
+            <el-option
+              v-for="semester in availableSemesters"
+              :key="semester"
+              :label="semester"
               :value="semester"
             />
           </el-select>
         </el-form-item>
 
         <el-form-item label="学年" prop="academic_year">
-          <el-input 
-            v-model="gradeForm.academic_year" 
-            placeholder="如：2023-2024"
+          <el-input
+            v-model="gradeForm.academic_year"
+            placeholder="如：2025-2026"
           />
         </el-form-item>
       </el-form>
@@ -314,13 +317,13 @@
                 <td>程序设计基础</td>
                 <td>3.0</td>
                 <td>92</td>
-                <td>2023-2024-1</td>
-                <td>2023-2024</td>
+                <td>2025-2026-1</td>
+                <td>2025-2026</td>
               </tr>
             </tbody>
           </table>
         </div>
-        
+
         <div class="import-actions">
           <el-upload
             action="#"
@@ -471,15 +474,15 @@ const filteredGrades = computed(() => {
       return g.grade_point >= Number(min) && g.grade_point <= Number(max)
     })
   }
-  
+
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(g => 
+    filtered = filtered.filter((g) =>
       g.course_name.toLowerCase().includes(keyword) ||
       g.course_code.toLowerCase().includes(keyword)
     )
   }
-  
+
   switch (tableSort.value) {
     case 'semester_desc':
       filtered.sort((a, b) => b.semester.localeCompare(a.semester))
@@ -490,11 +493,17 @@ const filteredGrades = computed(() => {
     case 'score_desc':
       filtered.sort((a, b) => b.score - a.score)
       break
+    case 'score_asc':
+      filtered.sort((a, b) => a.score - b.score)
+      break
     case 'gpa_desc':
       filtered.sort((a, b) => b.grade_point - a.grade_point)
       break
+    case 'gpa_asc':
+      filtered.sort((a, b) => a.grade_point - b.grade_point)
+      break
   }
-  
+
   return filtered
 })
 
@@ -574,7 +583,7 @@ const gpaTrendData = computed(() => {
     }
     semesterGroups[grade.semester].push(grade)
   })
-  
+
   return Object.keys(semesterGroups)
     .sort()
     .map(semester => ({
@@ -585,21 +594,20 @@ const gpaTrendData = computed(() => {
 
 const calculateGPA = (gradeList) => {
   if (gradeList.length === 0) return 0
-  
+
   const totalPoints = gradeList.reduce((sum, grade) => {
     return sum + (grade.grade_point * grade.credit)
   }, 0)
-  
+
   const totalCreditsValue = gradeList.reduce((sum, grade) => sum + grade.credit, 0)
-  
+
   return totalCreditsValue > 0 ? totalPoints / totalCreditsValue : 0
 }
 
 const calculateGradePoint = (score) => {
   if (score < 60) return 0
-  const base = 1
   const extra = Math.max(score - 60, 0) * 0.1
-  return Math.min(5, Number((base + extra).toFixed(2)))
+  return Math.min(5, Number((1 + extra).toFixed(2)))
 }
 
 const handleScoreChange = (score) => {
@@ -607,9 +615,9 @@ const handleScoreChange = (score) => {
 }
 
 const getGpaColor = (gpa) => {
-  if (gpa >= 3.5) return '#52c41a'
-  if (gpa >= 3.0) return '#1890ff'
-  if (gpa >= 2.5) return '#faad14'
+  if (gpa >= 4) return '#52c41a'
+  if (gpa >= 3) return '#1890ff'
+  if (gpa >= 2) return '#faad14'
   return '#f5222d'
 }
 
@@ -651,12 +659,14 @@ const handleDeleteGrade = async (grade) => {
         type: 'warning'
       }
     )
-    
+
     await deleteGrade(grade.id)
     ElMessage.success('已删除')
     await Promise.all([loadGrades(), loadStats()])
   } catch (error) {
-    console.log('Delete cancelled or failed', error)
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '删除失败')
+    }
   }
 }
 
@@ -679,7 +689,7 @@ const resetGradeForm = () => {
 
 const submitGradeForm = async () => {
   if (!gradeFormRef.value) return
-  
+
   try {
     await gradeFormRef.value.validate()
     submitting.value = true
@@ -706,8 +716,9 @@ const submitGradeForm = async () => {
     showGradeDialog.value = false
     resetGradeForm()
   } catch (error) {
-    console.error('Submit failed:', error)
-    ElMessage.error(error.message || '提交失败，请稍后重试')
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '提交失败，请稍后重试')
+    }
   } finally {
     submitting.value = false
   }
@@ -723,21 +734,34 @@ const handlePageChange = ({ page, size }) => {
   pageSize.value = size
 }
 
-const handleSearch = (keyword) => {
-  searchKeyword.value = keyword || ''
+const handleSearch = (keyword = '') => {
+  searchKeyword.value = keyword
 }
 
 const handleSortChange = (sort) => {
-  console.log('Sort change:', sort)
+  if (!sort) return
+  if (typeof sort === 'string') {
+    tableSort.value = sort
+    return
+  }
+
+  if (!sort.order) {
+    tableSort.value = 'semester_desc'
+    return
+  }
+
+  if (sort.prop === 'score') {
+    tableSort.value = sort.order === 'ascending' ? 'score_asc' : 'score_desc'
+  } else if (sort.prop === 'grade_point') {
+    tableSort.value = sort.order === 'ascending' ? 'gpa_asc' : 'gpa_desc'
+  } else if (sort.prop === 'semester') {
+    tableSort.value = sort.order === 'ascending' ? 'semester_asc' : 'semester_desc'
+  }
 }
 
 const handleSemesterClick = (semester) => {
-  if (gradeFilter.value) {
-    const filters = gradeFilter.value.getFilters()
-    filters.semester = semester
-    activeFilters.value = { ...filters }
-    gradeFilter.value.handleFilterChange()
-  }
+  initialFilters.value = { ...initialFilters.value, semester }
+  activeFilters.value = { ...activeFilters.value, semester }
 }
 
 const handleSelectionChange = (selection) => {
@@ -775,21 +799,20 @@ const getCurrentAcademicYear = () => {
   const year = now.getFullYear()
   const month = now.getMonth() + 1
   if (month >= 9) {
-    return year + '-' + (year + 1)
-  } else {
-    return (year - 1) + '-' + year
+    return `${year}-${year + 1}`
   }
+  return `${year - 1}-${year}`
 }
 
 const updateSemesterData = () => {
   const semesters = new Set()
   const academicYears = new Set()
-  
+
   grades.value.forEach(grade => {
     if (grade.semester) semesters.add(grade.semester)
     if (grade.academic_year) academicYears.add(grade.academic_year)
   })
-  
+
   availableSemesters.value = Array.from(semesters).sort().reverse()
   availableAcademicYears.value = Array.from(academicYears).sort().reverse()
 }
@@ -821,8 +844,8 @@ onMounted(async () => {
   gradeForm.value.academic_year = getCurrentAcademicYear()
 })
 </script>
+
 <style scoped>
-/* 固定宽度布局，参考首页Dashboard */
 .grade-data-page {
   width: 1200px;
   margin: 0 auto;
@@ -833,7 +856,6 @@ onMounted(async () => {
   gap: 20px;
 }
 
-/* 页面标题 */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -877,7 +899,6 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-/* 各区域通用样式 - 使用固定布局 */
 .stats-section,
 .chart-section,
 .data-section {
@@ -920,10 +941,8 @@ onMounted(async () => {
   font-size: 14px;
   color: #666;
   margin-left: 15px;
-  font-weight: normal;
 }
 
-/* GPA统计卡片 - 固定宽度网格 */
 .gpa-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -931,18 +950,16 @@ onMounted(async () => {
   margin-top: 10px;
   width: 100%;
 }
+
 .gpa-stats-grid :deep(.gpa-stat-card) {
-  height: 180px !important; /* 增加高度，原来是140px */
+  height: 180px !important;
 }
 
-
-/* 图表区域 */
 .chart-section {
   min-height: 400px;
   width: 100%;
 }
 
-/* 数据管理区域 */
 .data-section {
   flex: 1;
   width: 100%;
@@ -965,7 +982,6 @@ onMounted(async () => {
   align-items: center;
 }
 
-/* 对话框样式 */
 .form-tip {
   font-size: 12px;
   color: #999;
@@ -978,7 +994,6 @@ onMounted(async () => {
   gap: 10px;
 }
 
-/* 批量导入样式 */
 .import-guide {
   padding: 10px;
 }
@@ -1014,6 +1029,4 @@ onMounted(async () => {
   gap: 10px;
   margin-top: 20px;
 }
-
-
 </style>
