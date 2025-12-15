@@ -3,31 +3,31 @@
   <div class="grade-data-page">
     <div class="page-header">
       <div class="header-left">
-        <h1>GPA Dashboard</h1>
+        <h1>GPA 数据面板</h1>
         <div class="header-stats">
           <span class="stat-item">
-            <span class="stat-label">Current GPA:</span>
+            <span class="stat-label">当前 GPA：</span>
             <span class="stat-value">{{ currentGPA.toFixed(2) }}</span>
           </span>
           <span class="stat-item">
-            <span class="stat-label">Total Credits:</span>
+            <span class="stat-label">总学分：</span>
             <span class="stat-value">{{ totalCredits }}</span>
           </span>
           <span class="stat-item">
-            <span class="stat-label">Pass Rate:</span>
+            <span class="stat-label">通过率：</span>
             <span class="stat-value">{{ passRate }}%</span>
           </span>
         </div>
       </div>
       <div class="header-actions">
         <el-button type="primary" @click="showAddDialog" :icon="Plus">
-          Add Grade
+          新增成绩
         </el-button>
         <el-button @click="exportData" :icon="Download">
-          Export Data
+          导出数据
         </el-button>
         <el-button @click="refreshData" :icon="Refresh">
-          Refresh
+          刷新
         </el-button>
       </div>
     </div>
@@ -35,31 +35,31 @@
     <div class="stats-section">
       <div class="section-title">
         <el-icon><DataAnalysis /></el-icon>
-        <h3>GPA Overview</h3>
+        <h3>GPA 总览</h3>
       </div>
       <div class="gpa-stats-grid">
         <GpaStats
-          title="Current Semester GPA"
+          title="本学期 GPA"
           :value="currentSemesterGPA"
-          label="This Semester"
+          label="当前学期"
           icon="Trophy"
           :icon-color="getGpaColor(currentSemesterGPA)"
           :tag="currentSemester"
         />
         
         <GpaStats
-          title="Cumulative GPA"
+          title="累计 GPA"
           :value="totalGPA"
-          label="All Semesters"
+          label="全部学期"
           icon="Star"
           :icon-color="getGpaColor(totalGPA)"
-          :sub-info="`Courses: ${totalCourses}`"
+          :sub-info="`课程数：${totalCourses}`"
         />
         
         <GpaStats
-          title="Credit Progress"
+          title="学分完成情况"
           :value="passedCredits"
-          label="Earned Credits"
+          label="已修学分"
           icon="Checked"
           icon-color="#52c41a"
           :show-progress="true"
@@ -70,9 +70,9 @@
         />
         
         <GpaStats
-          title="Pass Rate"
+          title="通过率"
           :value="passRate"
-          label="Passed"
+          label="已通过"
           icon="SuccessFilled"
           icon-color="#1890ff"
           :show-progress="true"
@@ -88,12 +88,12 @@
       <div class="section-header">
         <div class="section-title">
           <el-icon><TrendCharts /></el-icon>
-          <h3>GPA Trend Analysis</h3>
+          <h3>GPA 趋势分析</h3>
         </div>
       </div>
       
       <GpaTrendChart
-        :title="'Semester GPA Trend'"
+        :title="'学期 GPA 趋势'"
         :gpa-data="gpaTrendData"
         :height="'300px'"
         @semester-click="handleSemesterClick"
@@ -104,12 +104,12 @@
       <div class="section-header">
         <div class="section-title">
           <el-icon><List /></el-icon>
-          <h3>Grade Records</h3>
-          <span class="record-count">Total {{ totalRecords }} records</span>
+          <h3>成绩记录</h3>
+          <span class="record-count">共 {{ totalRecords }} 条</span>
         </div>
         <div class="section-actions">
           <el-button size="small" @click="showBatchImport = true" :icon="Upload">
-            Batch Import
+            批量导入
           </el-button>
         </div>
       </div>
@@ -143,7 +143,7 @@
             <div class="toolbar-left">
               <el-input
                 v-model="searchKeyword"
-                placeholder="Search course name or code..."
+                placeholder="搜索课程名称或代码..."
                 prefix-icon="Search"
                 style="width: 300px"
                 clearable
@@ -151,14 +151,14 @@
               />
               <el-select 
                 v-model="tableSort" 
-                placeholder="Sort"
+                placeholder="排序方式"
                 size="small"
                 style="width: 150px"
               >
-                <el-option label="Semester Desc" value="semester_desc" />
-                <el-option label="Semester Asc" value="semester_asc" />
-                <el-option label="Score Desc" value="score_desc" />
-                <el-option label="GPA Desc" value="gpa_desc" />
+                <el-option label="按学期降序" value="semester_desc" />
+                <el-option label="按学期升序" value="semester_asc" />
+                <el-option label="按成绩降序" value="score_desc" />
+                <el-option label="按 GPA 降序" value="gpa_desc" />
               </el-select>
             </div>
             <div class="toolbar-right">
@@ -169,7 +169,7 @@
                 :disabled="selectedCount === 0"
                 :icon="Document"
               >
-                Export Selected ({{ selectedCount }})
+                导出已选 ({{ selectedCount }})
               </el-button>
             </div>
           </template>
@@ -189,21 +189,21 @@
         :rules="gradeFormRules" 
         label-width="100px"
       >
-        <el-form-item label="Course Name" prop="course_name">
+        <el-form-item label="课程名称" prop="course_name">
           <el-input 
             v-model="gradeForm.course_name" 
-            placeholder="Enter course name"
+            placeholder="请输入课程名称"
           />
         </el-form-item>
 
-        <el-form-item label="Course Code" prop="course_code">
+        <el-form-item label="课程代码" prop="course_code">
           <el-input 
             v-model="gradeForm.course_code" 
-            placeholder="e.g. CS101"
+            placeholder="如：CS101"
           />
         </el-form-item>
 
-        <el-form-item label="Credit" prop="credit">
+        <el-form-item label="学分" prop="credit">
           <el-input-number 
             v-model="gradeForm.credit" 
             :min="0.5" 
@@ -214,7 +214,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="Score" prop="score">
+        <el-form-item label="成绩" prop="score">
           <el-input-number 
             v-model="gradeForm.score" 
             :min="0" 
@@ -224,7 +224,7 @@
             style="width: 100%"
             @change="handleScoreChange"
           />
-          <div class="form-tip">Enter score (0-100), GPA will be calculated automatically</div>
+          <div class="form-tip">成绩范围 0-100，GPA 会自动计算</div>
         </el-form-item>
 
         <el-form-item label="GPA" prop="grade_point">
@@ -240,24 +240,27 @@
           />
         </el-form-item>
 
-        <el-form-item label="Course Type" prop="course_type">
+        <el-form-item label="课程类型" prop="course_type">
           <el-select 
             v-model="gradeForm.course_type" 
-            placeholder="Select course type"
+            placeholder="请选择课程类型"
             style="width: 100%"
           >
-            <el-option label="Required" value="required" />
-            <el-option label="Elective" value="elective" />
-            <el-option label="General" value="general" />
-            <el-option label="Practice" value="practice" />
+            <el-option label="必修" value="required" />
+            <el-option label="选修" value="elective" />
+            <el-option label="通识" value="general" />
+            <el-option label="实践" value="practice" />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Semester" prop="semester">
+        <el-form-item label="学期" prop="semester">
           <el-select 
             v-model="gradeForm.semester" 
-            placeholder="Select semester"
+            placeholder="请选择或输入学期"
             style="width: 100%"
+            filterable
+            allow-create
+            default-first-option
           >
             <el-option 
               v-for="semester in availableSemesters" 
@@ -268,19 +271,19 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Academic Year" prop="academic_year">
+        <el-form-item label="学年" prop="academic_year">
           <el-input 
             v-model="gradeForm.academic_year" 
-            placeholder="e.g. 2023-2024"
+            placeholder="如：2023-2024"
           />
         </el-form-item>
       </el-form>
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="showGradeDialog = false">Cancel</el-button>
+          <el-button @click="showGradeDialog = false">取消</el-button>
           <el-button type="primary" @click="submitGradeForm" :loading="submitting">
-            Confirm
+            确定
           </el-button>
         </span>
       </template>
@@ -288,27 +291,27 @@
 
     <el-dialog
       v-model="showBatchImport"
-      title="Batch Import"
+      title="批量导入"
       width="600px"
     >
       <div class="import-guide">
-        <p>Please prepare an Excel/CSV file with the following columns:</p>
+        <p>请准备包含以下列的 Excel/CSV 文件：</p>
         <div class="format-example">
           <table>
             <thead>
               <tr>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Credit</th>
-                <th>Score</th>
-                <th>Semester</th>
-                <th>Academic Year</th>
+                <th>课程代码</th>
+                <th>课程名称</th>
+                <th>学分</th>
+                <th>成绩</th>
+                <th>学期</th>
+                <th>学年</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>CS101</td>
-                <td>Programming Basics</td>
+                <td>程序设计基础</td>
                 <td>3.0</td>
                 <td>92</td>
                 <td>2023-2024-1</td>
@@ -326,10 +329,10 @@
             :before-upload="handleFileUpload"
             accept=".xlsx,.xls,.csv"
           >
-            <el-button type="primary" :icon="Upload">Select File</el-button>
+            <el-button type="primary" :icon="Upload">选择文件</el-button>
           </el-upload>
           <el-button :icon="Download" @click="downloadTemplate">
-            Download Template
+            下载模板
           </el-button>
         </div>
       </div>
@@ -408,11 +411,11 @@ const gradeForm = ref({
 })
 
 const gradeFormRules = {
-  course_name: [{ required: true, message: 'Please enter course name', trigger: 'blur' }],
-  course_code: [{ required: true, message: 'Please enter course code', trigger: 'blur' }],
-  credit: [{ required: true, message: 'Please enter credit', trigger: 'blur' }],
-  score: [{ required: true, message: 'Please enter score', trigger: 'blur' }],
-  semester: [{ required: true, message: 'Please select semester', trigger: 'change' }]
+  course_name: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
+  course_code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
+  credit: [{ required: true, message: '请输入学分', trigger: 'blur' }],
+  score: [{ required: true, message: '请输入成绩', trigger: 'blur' }],
+  semester: [{ required: true, message: '请选择学期', trigger: 'change' }]
 }
 
 const dialogTitle = computed(() => {
@@ -593,16 +596,10 @@ const calculateGPA = (gradeList) => {
 }
 
 const calculateGradePoint = (score) => {
-  if (score >= 90) return 4.0
-  if (score >= 85) return 3.7
-  if (score >= 82) return 3.3
-  if (score >= 78) return 3.0
-  if (score >= 75) return 2.7
-  if (score >= 72) return 2.3
-  if (score >= 68) return 2.0
-  if (score >= 64) return 1.5
-  if (score >= 60) return 1.0
-  return 0
+  if (score < 60) return 0
+  const base = 1
+  const extra = Math.max(score - 60, 0) * 0.1
+  return Math.min(5, Number((base + extra).toFixed(2)))
 }
 
 const handleScoreChange = (score) => {
@@ -646,17 +643,17 @@ const handleEditGrade = (grade) => {
 const handleDeleteGrade = async (grade) => {
   try {
     await ElMessageBox.confirm(
-      `Are you sure to delete "${grade.course_name}"?`,
-      'Confirm',
+      `确定删除「${grade.course_name}」吗？`,
+      '提示',
       {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
         type: 'warning'
       }
     )
     
     await deleteGrade(grade.id)
-    ElMessage.success('Deleted')
+    ElMessage.success('已删除')
     await Promise.all([loadGrades(), loadStats()])
   } catch (error) {
     console.log('Delete cancelled or failed', error)
@@ -698,10 +695,10 @@ const submitGradeForm = async () => {
 
     if (dialogMode.value === 'create') {
       await createGrade(payload)
-      ElMessage.success('Created')
+      ElMessage.success('已创建')
     } else {
       await updateGrade(currentGradeId.value, payload)
-      ElMessage.success('Updated')
+      ElMessage.success('已更新')
     }
 
     await Promise.all([loadGrades(), loadStats()])
@@ -710,7 +707,7 @@ const submitGradeForm = async () => {
     resetGradeForm()
   } catch (error) {
     console.error('Submit failed:', error)
-    ElMessage.error(error.message || 'Submit failed, please try again')
+    ElMessage.error(error.message || '提交失败，请稍后重试')
   } finally {
     submitting.value = false
   }
@@ -748,29 +745,29 @@ const handleSelectionChange = (selection) => {
 }
 
 const exportData = () => {
-  ElMessage.info('Export is under development...')
+  ElMessage.info('导出功能开发中...')
 }
 
 const exportSelected = () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning('Please select at least one row')
+    ElMessage.warning('请至少选择一条数据')
     return
   }
-  ElMessage.info(`Exporting ${selectedRows.value.length} rows`)
+  ElMessage.info(`正在导出 ${selectedRows.value.length} 条数据`)
 }
 
 const refreshData = async () => {
   await Promise.all([loadGrades(), loadStats()])
-  ElMessage.success('Data refreshed')
+  ElMessage.success('数据已刷新')
 }
 
 const handleFileUpload = (file) => {
-  ElMessage.info(`File ${file.name} uploaded, parsing...`)
+  ElMessage.info(`文件 ${file.name} 已上传，解析中...`)
   return false
 }
 
 const downloadTemplate = () => {
-  ElMessage.info('Downloading template')
+  ElMessage.info('正在下载模板')
 }
 
 const getCurrentAcademicYear = () => {
@@ -803,7 +800,7 @@ const loadGrades = async () => {
     grades.value = resp?.data?.data?.list || resp?.data?.data || []
     updateSemesterData()
   } catch (error) {
-    ElMessage.error(error.message || 'Failed to load grades')
+    ElMessage.error(error.message || '加载成绩失败')
   }
 }
 
@@ -814,7 +811,7 @@ const loadStats = async () => {
       stats.value = resp.data.data || {}
     }
   } catch (error) {
-    ElMessage.error(error.message || 'Failed to load stats')
+    ElMessage.error(error.message || '加载统计数据失败')
   }
 }
 
