@@ -4,6 +4,7 @@ import com.example.studymanagement.model.Grade;
 import com.example.studymanagement.model.User;
 import com.example.studymanagement.repository.GradeRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -162,31 +165,351 @@ public class GradeController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "文件不能为空", "data", null));
         }
+
+        String extension = getFileExtension(file.getOriginalFilename());
+        if (!List.of("csv", "xlsx", "xls").contains(extension)) {
+            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "仅支持 CSV 或 Excel 文件", "data", null));
+        }
+
+        List<ImportRow> rows;
+        try {
+            rows = "xlsx".equals(extension) || "xls".equals(extension)
+                ? parseExcelRows(file)
+                : parseCsvRows(file);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", e.getMessage(), "data", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "文件无法读取", "data", null));
+        }
+
+        if (rows.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "文件中没有可导入的数据", "data", null));
+        }
+
         List<Grade> toSave = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            reader.lines().skip(1).filter(line -> !line.isBlank()).forEach(line -> {
-                String[] parts = line.split(",");
-                if (parts.length >= 4) {
-                    Grade grade = new Grade();
-                    grade.setUserId(user.getId());
-                    grade.setCourseCode(parts[0].trim());
-                    grade.setCourseName(parts[1].trim());
-                    grade.setCredit(parseDouble(parts[2]));
-                    grade.setScore(parseDouble(parts[3]));
-                    grade.setGradePoint(parts.length > 4 ? parseDouble(parts[4]) : null);
-                    grade.setSemester(parts.length > 5 ? parts[5].trim() : null);
-                    grade.setAcademicYear(parts.length > 6 ? parts[6].trim() : null);
-                    grade.setStatus(grade.getScore() != null && grade.getScore() >= 60 ? "通过" : "未通过");
-                    grade.setCreatedAt(LocalDateTime.now());
-                    grade.setUpdatedAt(LocalDateTime.now());
+        List<String> errors = new ArrayList<>();
+        for (ImportRow row : rows) {
+            try {
+                Grade grade = buildGradeFromRow(row.getValues(), user.getId());
+                if (grade != null) {
                     toSave.add(grade);
                 }
-            });
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "导入失败", "data", null));
+            } catch (IllegalArgumentException e) {
+                errors.add("第" + row.getRowNumber() + "行：" + e.getMessage());
+            }
         }
+
+        if (toSave.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "code", 400,
+                "message", "没有记录通过校验",
+                "data", Map.of("errors", errors)
+            ));
+        }
+
         gradeRepository.saveAll(toSave);
-        return ResponseEntity.ok(Map.of("code", 0, "message", "ok", "data", Map.of("imported", toSave.size())));
+        Map<String, Object> result = new HashMap<>();
+        result.put("imported", toSave.size());
+        result.put("failed", errors.size());
+        result.put("errors", errors);
+
+        String message = errors.isEmpty() ? "导入成功" : "部分记录导入成功";
+        return ResponseEntity.ok(Map.of("code", 0, "message", message, "data", result));
+    }
+
+    private List<ImportRow> parseCsvRows(MultipartFile file) throws IOException {
+        List<ImportRow> rows = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                throw new IllegalArgumentException("文件为空");
+            }
+            List<String> headers = new ArrayList<>();
+            for (String header : splitCsvLine(headerLine)) {
+                headers.add(normalizeHeader(header));
+            }
+            if (headers.stream().noneMatch(StringUtils::hasText)) {
+                throw new IllegalArgumentException("未检测到表头");
+            }
+            String line;
+            int rowNumber = 2;
+            while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) {
+                    rowNumber++;
+                    continue;
+                }
+                List<String> values = splitCsvLine(line);
+                Map<String, String> valueMap = new HashMap<>();
+                for (int i = 0; i < headers.size() && i < values.size(); i++) {
+                    String header = headers.get(i);
+                    if (StringUtils.hasText(header)) {
+                        valueMap.put(header, cleanValue(values.get(i)));
+                    }
+                }
+                if (!valueMap.isEmpty() && !isRowEmpty(valueMap)) {
+                    rows.add(new ImportRow(rowNumber, valueMap));
+                }
+                rowNumber++;
+            }
+        }
+        return rows;
+    }
+
+    private List<ImportRow> parseExcelRows(MultipartFile file) throws IOException {
+        List<ImportRow> rows = new ArrayList<>();
+        try (InputStream inputStream = file.getInputStream(); Workbook workbook = WorkbookFactory.create(inputStream)) {
+            Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
+            if (sheet == null) {
+                return rows;
+            }
+            Row headerRow = sheet.getRow(sheet.getFirstRowNum());
+            if (headerRow == null) {
+                throw new IllegalArgumentException("Excel 文件缺少表头");
+            }
+            int headerSize = headerRow.getLastCellNum();
+            List<String> headers = new ArrayList<>();
+            for (int i = 0; i < headerSize; i++) {
+                headers.add(normalizeHeader(getCellValue(headerRow.getCell(i))));
+            }
+            if (headers.stream().noneMatch(StringUtils::hasText)) {
+                throw new IllegalArgumentException("Excel 文件缺少有效表头");
+            }
+            for (int i = sheet.getFirstRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
+                Map<String, String> valueMap = new HashMap<>();
+                for (int j = 0; j < headers.size(); j++) {
+                    String header = headers.get(j);
+                    if (!StringUtils.hasText(header)) {
+                        continue;
+                    }
+                    String value = getCellValue(row.getCell(j));
+                    valueMap.put(header, cleanValue(value));
+                }
+                if (!valueMap.isEmpty() && !isRowEmpty(valueMap)) {
+                    rows.add(new ImportRow(i + 1, valueMap));
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Excel 文件解析失败");
+        }
+        return rows;
+    }
+
+    private List<String> splitCsvLine(String line) {
+        List<String> values = new ArrayList<>();
+        if (line == null) {
+            return values;
+        }
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    current.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (ch == ',' && !inQuotes) {
+                values.add(current.toString());
+                current.setLength(0);
+            } else {
+                current.append(ch);
+            }
+        }
+        values.add(current.toString());
+        return values;
+    }
+
+    private String normalizeHeader(String header) {
+        if (!StringUtils.hasText(header)) {
+            return "";
+        }
+        String normalized = header
+            .replace("\uFEFF", "")
+            .replace("（", "(")
+            .replace("）", ")")
+            .toLowerCase();
+        normalized = normalized.replaceAll("\\(.*?\\)", "");
+        normalized = normalized.replaceAll("[\\s_\\-]", "");
+        switch (normalized) {
+            case "课程代码":
+            case "coursecode":
+            case "courseid":
+            case "code":
+                return "courseCode";
+            case "课程名称":
+            case "coursename":
+            case "name":
+                return "courseName";
+            case "学分":
+            case "credit":
+            case "credits":
+                return "credit";
+            case "成绩":
+            case "score":
+            case "grade":
+                return "score";
+            case "绩点":
+            case "gpa":
+            case "gradepoint":
+                return "gradePoint";
+            case "课程类型":
+            case "coursetype":
+            case "type":
+                return "courseType";
+            case "学期":
+            case "semester":
+                return "semester";
+            case "学年":
+            case "academicyear":
+                return "academicYear";
+            case "是否必修":
+            case "isrequired":
+            case "required":
+                return "isRequired";
+            default:
+                return normalized;
+        }
+    }
+
+    private String cleanValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        String cleaned = value.replace("\uFEFF", "").trim();
+        return cleaned.isEmpty() ? null : cleaned;
+    }
+
+    private Grade buildGradeFromRow(Map<String, String> row, Long userId) {
+        String courseCode = cleanValue(row.get("courseCode"));
+        String courseName = cleanValue(row.get("courseName"));
+        if (!StringUtils.hasText(courseCode) || !StringUtils.hasText(courseName)) {
+            throw new IllegalArgumentException("课程代码与课程名称不能为空");
+        }
+        Double credit = parseDouble(row.get("credit"));
+        if (credit == null || credit <= 0) {
+            throw new IllegalArgumentException("学分缺失或格式错误");
+        }
+        Double score = parseDouble(row.get("score"));
+        if (score == null || score < 0 || score > 100) {
+            throw new IllegalArgumentException("成绩缺失或不在 0-100 范围内");
+        }
+
+        Grade grade = new Grade();
+        grade.setUserId(userId);
+        grade.setCourseCode(courseCode);
+        grade.setCourseName(courseName);
+        grade.setCredit(credit);
+        grade.setScore(score);
+        Double gradePoint = parseDouble(row.get("gradePoint"));
+        grade.setGradePoint(gradePoint != null ? gradePoint : scoreToGpa(score));
+        grade.setSemester(cleanValue(row.get("semester")));
+        grade.setAcademicYear(cleanValue(row.get("academicYear")));
+        String courseType = normalizeCourseType(row.get("courseType"));
+        grade.setCourseType(courseType);
+        grade.setIsRequired(determineIsRequired(row.get("isRequired"), courseType));
+        grade.setStatus(score >= 60 ? "通过" : "未通过");
+        grade.setCreatedAt(LocalDateTime.now());
+        grade.setUpdatedAt(LocalDateTime.now());
+        return grade;
+    }
+
+    private String normalizeCourseType(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase();
+        switch (normalized) {
+            case "必修":
+            case "required":
+            case "core":
+                return "required";
+            case "选修":
+            case "elective":
+                return "elective";
+            case "通识":
+            case "general":
+                return "general";
+            case "实践":
+            case "实验":
+            case "practice":
+            case "实训":
+                return "practice";
+            default:
+                return value;
+        }
+    }
+
+    private Boolean determineIsRequired(String raw, String courseType) {
+        Boolean parsed = parseBooleanValue(raw);
+        if (parsed != null) {
+            return parsed;
+        }
+        if ("required".equalsIgnoreCase(courseType)) {
+            return true;
+        }
+        if ("elective".equalsIgnoreCase(courseType)) {
+            return false;
+        }
+        return null;
+    }
+
+    private Boolean parseBooleanValue(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase();
+        if (List.of("是", "yes", "y", "true", "1", "必修").contains(normalized)) {
+            return true;
+        }
+        if (List.of("否", "no", "n", "false", "0", "选修").contains(normalized)) {
+            return false;
+        }
+        return null;
+    }
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        DataFormatter formatter = new DataFormatter();
+        return formatter.formatCellValue(cell);
+    }
+
+    private boolean isRowEmpty(Map<String, String> values) {
+        return values.values().stream().allMatch(v -> v == null || v.isBlank());
+    }
+
+    private String getFileExtension(String filename) {
+        if (!StringUtils.hasText(filename) || !filename.contains(".")) {
+            return "csv";
+        }
+        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+    }
+
+    private static class ImportRow {
+        private final int rowNumber;
+        private final Map<String, String> values;
+
+        ImportRow(int rowNumber, Map<String, String> values) {
+            this.rowNumber = rowNumber;
+            this.values = values;
+        }
+
+        public int getRowNumber() {
+            return rowNumber;
+        }
+
+        public Map<String, String> getValues() {
+            return values;
+        }
     }
 
     private List<Grade> filterGrades(Long userId,

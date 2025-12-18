@@ -303,7 +303,12 @@
       custom-class="card-tone card-tone--purple"
     >
       <div class="import-guide">
-        <p>请准备包含以下列的 Excel/CSV 文件：</p>
+        <p>请使用官方模板（首行为表头），支持 CSV/XLSX 文件：</p>
+        <ul class="template-notes">
+          <li>必填字段：课程代码、课程名称、学分、成绩（0-100）。</li>
+          <li>可选字段：绩点（留空自动换算）、课程类型（必修/选修/通识/实践）、学期、学年。</li>
+          <li>导入时会校验格式，如有异常会给出逐行提示。</li>
+        </ul>
         <div class="format-example">
           <table>
             <thead>
@@ -311,7 +316,9 @@
                 <th>课程代码</th>
                 <th>课程名称</th>
                 <th>学分</th>
-                <th>成绩</th>
+                <th>成绩（0-100）</th>
+                <th>绩点（可选）</th>
+                <th>课程类型</th>
                 <th>学期</th>
                 <th>学年</th>
               </tr>
@@ -322,6 +329,8 @@
                 <td>程序设计基础</td>
                 <td>3.0</td>
                 <td>92</td>
+                <td>3.7</td>
+                <td>必修</td>
                 <td>2025-2026-1</td>
                 <td>2025-2026</td>
               </tr>
@@ -335,11 +344,14 @@
             :multiple="false"
             :show-file-list="false"
             :before-upload="handleFileUpload"
+            :disabled="batchImporting"
             accept=".xlsx,.xls,.csv"
           >
-            <el-button type="primary" :icon="Upload">选择文件</el-button>
+            <el-button type="primary" :icon="Upload" :loading="batchImporting">
+              {{ batchImporting ? '导入中...' : '选择文件' }}
+            </el-button>
           </el-upload>
-          <el-button :icon="Download" @click="downloadTemplate">
+          <el-button :icon="Download" @click="downloadTemplate" :disabled="batchImporting">
             下载模板
           </el-button>
         </div>
@@ -365,7 +377,14 @@ import {
   Checked,
   SuccessFilled
 } from '@element-plus/icons-vue'
-import { listGrades, createGrade, updateGrade, deleteGrade, statsGrades } from '@/api/grades'
+import {
+  listGrades,
+  createGrade,
+  updateGrade,
+  deleteGrade,
+  statsGrades,
+  importGrades as importGradesApi
+} from '@/api/grades'
 
 import GpaTrendChart from '@/components/gpa/GpaTrendChart.vue'
 import GradeTable from '@/components/gpa/GradeTable.vue'
@@ -376,6 +395,7 @@ const pageSize = ref(20)
 const currentPage = ref(1)
 const showGradeDialog = ref(false)
 const showBatchImport = ref(false)
+const batchImporting = ref(false)
 const submitting = ref(false)
 const tableSort = ref('semester_desc')
 const selectedRows = ref([])
@@ -776,34 +796,54 @@ const escapeCsvValue = (value) => {
   return /[",\n]/.test(str) ? `"${str}"` : str
 }
 
+const gradeCsvHeaders = ['课程名称', '课程类型', '学分', '成绩', '绩点', '学期', '学年', '教师']
+const importTemplateHeaders = [
+  '课程代码',
+  '课程名称',
+  '学分',
+  '成绩（0-100）',
+  '绩点（可选）',
+  '课程类型（必修/选修/通识/实践）',
+  '学期（例如 2025-2026-1）',
+  '学年（例如 2025-2026）'
+]
+const importTemplateSample = ['CS101', '程序设计基础', '3.0', '92', '', '必修', '2025-2026-1', '2025-2026']
+
+const formatGradeRow = (item) => ([
+  item.course_name,
+  item.course_type,
+  item.credit ?? item.credits ?? '',
+  item.score,
+  item.grade_point,
+  item.semester,
+  item.academic_year,
+  item.teacher || ''
+].map(escapeCsvValue).join(','))
+
+const downloadGradesCsv = (records, suffix) => {
+  if (!records.length) return false
+  const rows = records.map(formatGradeRow)
+  const csv = [gradeCsvHeaders.join(','), ...rows].join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  link.download = `gpa-grades-${suffix}-${dateStamp}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  return true
+}
+
 const exportData = () => {
   if (!grades.value.length) {
     ElMessage.warning('暂无成绩数据可导出')
     return
   }
 
-  const headers = ['课程名称', '课程类型', '学分', '成绩', '绩点', '学期', '学年', '教师']
-  const rows = grades.value.map(item => ([
-    item.course_name,
-    item.course_type,
-    item.credits,
-    item.score,
-    item.grade_point,
-    item.semester,
-    item.academic_year,
-    item.teacher
-  ].map(escapeCsvValue).join(',')))
-
-  const csv = [headers.join(','), ...rows].join('\n')
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  const dateStamp = new Date().toISOString().slice(0, 10)
-  link.download = `gpa-grades-${dateStamp}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
-  ElMessage.success('成绩数据已导出')
+  if (downloadGradesCsv(grades.value, 'all')) {
+    ElMessage.success('成绩数据已导出')
+  }
 }
 
 const exportSelected = () => {
@@ -811,7 +851,10 @@ const exportSelected = () => {
     ElMessage.warning('请至少选择一条数据')
     return
   }
-  ElMessage.info(`正在导出 ${selectedRows.value.length} 条数据`)
+
+  if (downloadGradesCsv(selectedRows.value, 'selected')) {
+    ElMessage.success(`已导出 ${selectedRows.value.length} 条数据`)
+  }
 }
 
 const refreshData = async () => {
@@ -819,13 +862,58 @@ const refreshData = async () => {
   ElMessage.success('数据已刷新')
 }
 
-const handleFileUpload = (file) => {
-  ElMessage.info(`文件 ${file.name} 已上传，解析中...`)
+const handleFileUpload = async (uploadFile) => {
+  const rawFile = uploadFile?.raw instanceof Blob ? uploadFile.raw : uploadFile
+  if (!rawFile) {
+    ElMessage.error('无法读取文件')
+    return false
+  }
+  const fileName = rawFile.name || uploadFile?.name || ''
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  if (!['csv', 'xlsx', 'xls'].includes(extension)) {
+    ElMessage.warning('仅支持 CSV 或 Excel 文件')
+    return false
+  }
+  batchImporting.value = true
+  try {
+    const resp = await importGradesApi(rawFile)
+    if (resp?.data?.code !== 0) {
+      throw new Error(resp?.data?.message || '导入失败')
+    }
+    const result = resp.data.data || {}
+    await Promise.all([loadGrades(), loadStats()])
+    showBatchImport.value = false
+    const imported = result.imported ?? 0
+    const failed = result.failed ?? 0
+    if (Array.isArray(result.errors) && result.errors.length) {
+      await ElMessageBox.alert(result.errors.join('\n'), '部分记录未导入', {
+        type: 'warning',
+        confirmButtonText: '知道了'
+      })
+    }
+    const successMsg =
+      failed > 0
+        ? `成功导入 ${imported} 条，${failed} 条未通过校验`
+        : `成功导入 ${imported} 条记录`
+    ElMessage.success(successMsg)
+  } catch (error) {
+    ElMessage.error(error.message || '导入失败，请检查模板内容')
+  } finally {
+    batchImporting.value = false
+  }
   return false
 }
 
 const downloadTemplate = () => {
-  ElMessage.info('正在下载模板')
+  const csv = [importTemplateHeaders.join(','), importTemplateSample.join(',')].join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'grade-import-template.csv'
+  link.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('模板已下载')
 }
 
 const getCurrentAcademicYear = () => {
@@ -1036,6 +1124,17 @@ onMounted(async () => {
 
 .import-guide {
   padding: 10px;
+}
+
+.template-notes {
+  margin: 10px 0;
+  padding-left: 20px;
+  color: #666;
+  font-size: 13px;
+}
+
+.template-notes li {
+  margin-bottom: 4px;
 }
 
 .format-example {

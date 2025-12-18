@@ -88,7 +88,8 @@ DEEPSEEK_API_BASE=https://api.deepseek.com
   - body：同上
 - DELETE /api/grades/{id}
 - POST /api/grades/import  
-  - form-data：file(xlsx/csv)，return 解析/入库结果
+  - form-data：file(xlsx/csv)，首行必须为表头，至少包含 `课程代码/课程名称/学分/成绩(0-100)`，可选 `绩点/课程类型/学期/学年`  
+  - return：{ imported, failed, errors:[逐行错误提示] }
 - GET /api/grades/export  
   - query：ids?（可选）导出所选或全部
 - GET /api/grades/stats  
