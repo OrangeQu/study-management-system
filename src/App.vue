@@ -13,7 +13,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color: #333;
+  color: var(--nav-active, #333);
+  background: var(--page-bg, #f6f7f9);
 }
 
 :root{

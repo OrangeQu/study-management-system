@@ -265,38 +265,6 @@
               </div>
             </div>
 
-            <!-- 界面设置 -->
-            <div class="appearance-card">
-              <div class="card-header">
-                <h3>界面设置</h3>
-              </div>
-              
-              <div class="interface-settings">
-                <div class="setting-item">
-                  <span class="setting-label">导航栏固定</span>
-                  <el-switch v-model="fixedHeader" />
-                  <div class="setting-desc">滚动时保持导航栏在顶部</div>
-                </div>
-                
-                <div class="setting-item">
-                  <span class="setting-label">显示面包屑</span>
-                  <el-switch v-model="showBreadcrumb" />
-                  <div class="setting-desc">显示页面路径导航</div>
-                </div>
-                
-                <div class="setting-item">
-                  <span class="setting-label">标签页模式</span>
-                  <el-switch v-model="enableTagsView" />
-                  <div class="setting-desc">启用多标签页功能</div>
-                </div>
-                
-                <div class="setting-item">
-                  <span class="setting-label">动画效果</span>
-                  <el-switch v-model="enableAnimation" />
-                  <div class="setting-desc">启用页面切换动画</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -601,19 +569,49 @@ const passwordRules = {
   ]
 }
 
+const THEME_PRESETS = {
+  blue: {
+    primary: '#2cc7b7',
+    accent: '#fb8c4a',
+    pageBg: '#f6f7f9',
+    navBg: '#f4f6f7',
+    navActive: '#2b3250',
+    cardBg: '#ffffff'
+  },
+  green: {
+    primary: '#36c187',
+    accent: '#ffb74d',
+    pageBg: '#f3f9f4',
+    navBg: '#e6f4ec',
+    navActive: '#1f3c2e',
+    cardBg: '#ffffff'
+  },
+  purple: {
+    primary: '#7f6dff',
+    accent: '#ff9acb',
+    pageBg: '#f8f6ff',
+    navBg: '#efe9ff',
+    navActive: '#3c2f6b',
+    cardBg: '#ffffff'
+  },
+  orange: {
+    primary: '#ff8d4e',
+    accent: '#ffd166',
+    pageBg: '#fff7f0',
+    navBg: '#ffeede',
+    navActive: '#5c3a1c',
+    cardBg: '#ffffff'
+  }
+}
+
 const themes = ref([
-  { name: 'blue', title: '清爽蓝', description: '默认主题，清晰易读', color: '#1890ff' },
-  { name: 'green', title: '活力绿', description: '温和护眼，适合长时间学习', color: '#52c41a' },
-  { name: 'purple', title: '冷静紫', description: '沉稳配色，帮助集中注意力', color: '#722ed1' },
-  { name: 'orange', title: '暖心橙', description: '明快活泼，激发学习动力', color: '#fa8c16' }
+  { name: 'blue', title: '清爽蓝', description: '默认主题，清晰易读', color: THEME_PRESETS.blue.primary },
+  { name: 'green', title: '活力绿', description: '温和护眼，适合长时间学习', color: THEME_PRESETS.green.primary },
+  { name: 'purple', title: '冷静紫', description: '沉稳配色，帮助集中注意力', color: THEME_PRESETS.purple.primary },
+  { name: 'orange', title: '暖心橙', description: '明快活泼，激发学习动力', color: THEME_PRESETS.orange.primary }
 ])
 
 const currentTheme = ref(store.preferences.theme || 'blue')
-const fixedHeader = ref(store.preferences.fixedHeader ?? true)
-const showBreadcrumb = ref(store.preferences.showBreadcrumb ?? true)
-const enableTagsView = ref(store.preferences.enableTagsView ?? true)
-const enableAnimation = ref(store.preferences.enableAnimation ?? true)
-
 const studySettings = ref({
   pomodoroWork: store.studySettings.pomodoroWork,
   pomodoroBreak: store.studySettings.pomodoroBreak,
@@ -635,12 +633,26 @@ const currentThemeName = computed(() => {
 
 const buildPreferencesPayload = () => ({
   theme: currentTheme.value,
-  fixedHeader: fixedHeader.value,
-  showBreadcrumb: showBreadcrumb.value,
-  enableTagsView: enableTagsView.value,
-  enableAnimation: enableAnimation.value,
   studySettings: { ...studySettings.value }
 })
+
+const applyThemeColors = (themeName) => {
+  const preset = THEME_PRESETS[themeName] || THEME_PRESETS.blue
+  const root = document.documentElement
+  const mapping = {
+    primary: '--primary',
+    accent: '--accent',
+    pageBg: '--page-bg',
+    navBg: '--nav-bg',
+    navActive: '--nav-active',
+    cardBg: '--card-bg'
+  }
+  Object.entries(mapping).forEach(([key, cssVar]) => {
+    if (preset[key]) {
+      root.style.setProperty(cssVar, preset[key])
+    }
+  })
+}
 
 const schedulePreferencesSave = () => {
   if (!preferencesReady) return
@@ -658,9 +670,10 @@ const schedulePreferencesSave = () => {
   }, 600)
 }
 
-watch([currentTheme, fixedHeader, showBreadcrumb, enableTagsView, enableAnimation], () => {
+watch(currentTheme, (value) => {
+  applyThemeColors(value)
   schedulePreferencesSave()
-})
+}, { immediate: true })
 
 watch(studySettings, () => {
   schedulePreferencesSave()
@@ -850,20 +863,12 @@ const loadPreferences = async () => {
     preferencesReady = false
     const merged = {
       theme: prefs.theme ?? currentTheme.value,
-      fixedHeader: prefs.fixedHeader ?? fixedHeader.value,
-      showBreadcrumb: prefs.showBreadcrumb ?? showBreadcrumb.value,
-      enableTagsView: prefs.enableTagsView ?? enableTagsView.value,
-      enableAnimation: prefs.enableAnimation ?? enableAnimation.value,
       studySettings: {
         ...studySettings.value,
         ...(prefs.studySettings)
       }
     }
     currentTheme.value = merged.theme
-    fixedHeader.value = merged.fixedHeader
-    showBreadcrumb.value = merged.showBreadcrumb
-    enableTagsView.value = merged.enableTagsView
-    enableAnimation.value = merged.enableAnimation
     studySettings.value = { ...merged.studySettings }
     store.setPreferences(merged)
   } catch (error) {
@@ -1250,12 +1255,6 @@ onMounted(async () => {
 }
 
 /* 界面设置 */
-.interface-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
 .setting-item {
   display: flex;
   align-items: center;
