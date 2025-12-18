@@ -1,6 +1,29 @@
 <template>
   <div class="dashboard">
-    
+    <div class="welcome-card card-wrapper">
+      <div class="welcome-left">
+        <p class="welcome-subtitle">你好，亲爱的</p>
+        <h2 class="welcome-title">{{ displayName }}同学</h2>
+        <p class="welcome-desc">今天也要保持热情，完成学习目标！</p>
+      </div>
+      <div class="welcome-right">
+        <div v-if="goalAlerts.length" class="goal-alerts">
+          <div
+            v-for="(alert, idx) in goalAlerts"
+            :key="idx"
+            class="goal-alert-item"
+          >
+            <div class="alert-title">{{ alert.title }}</div>
+            <div class="alert-desc">{{ alert.description }}</div>
+          </div>
+        </div>
+        <div v-else class="goal-alert-empty">
+          <el-icon><Check /></el-icon>
+          <span>目标都已完成，继续保持！</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 主要功能区（两列布局：左主区，右番茄钟） -->
     <div class="main-area">
       <!-- 左主列：上排三张卡片（快速操作 / 即将截止 / GPA趋势），中间学习统计，底部计划+待办 -->
@@ -294,7 +317,8 @@ import {
   Plus,
   Setting,
   Edit,
-  ChatDotRound
+  ChatDotRound,
+  Check
 } from '@element-plus/icons-vue'
 import PomodoroTimer from '../components/timer/PomodoroTimer.vue'
 import StudyChart from '../components/charts/StudyChart.vue'
@@ -302,10 +326,12 @@ import TaskForm from '@/components/task/TaskForm.vue'
 import PlanForm from '@/components/plan/PlanForm.vue'
 import { listTasks, updateTaskStatus as apiUpdateTaskStatus, createTask, updateTask, summaryTasks } from '@/api/tasks'
 import { listPlans, createPlan, updatePlan } from '@/api/plans'
-import { todayStats as apiTodayStats } from '@/api/study'
+import { todayStats as apiTodayStats, trendStats as apiTrendStats } from '@/api/study'
 import { statsGrades } from '@/api/grades'
+import { useMainStore } from '@/stores'
 
 const router = useRouter()
+const store = useMainStore()
 
 const showTaskDialog = ref(false)
 const showPlanDialog = ref(false)
@@ -318,8 +344,16 @@ const tasks = ref([])
 const plans = ref([])
 const todayStudyTime = ref(0)
 const gpaStats = ref({ trend: [] })
+const weeklyStudyMinutes = ref(0)
 
 const GPA_FULL_SCORE = 5
+const studySettings = computed(() => store.studySettings || {})
+const reminderThresholdHours = computed(() => {
+  const map = { none: 0, '1h': 1, '3h': 3, '1d': 24 }
+  const value = studySettings.value.taskReminder
+  if (typeof value === 'number') return value
+  return map[value] ?? 24
+})
 
 // welcome card removed — unused computed values omitted
 
@@ -365,12 +399,14 @@ const dashboardPlans = computed(() => {
 
 const urgentDeadlines = computed(() => {
   const now = dayjs()
+  const threshold = reminderThresholdHours.value
+  if (threshold <= 0) return []
   return tasks.value
     .filter(task => {
       if (!task.deadline || task.completed) return false
       const deadline = dayjs(task.deadline)
       const diffHours = deadline.diff(now, 'hour')
-      return diffHours > 0 && diffHours <= 24
+      return diffHours > 0 && diffHours <= threshold
     })
     .map(task => ({
       id: task.id,
@@ -437,6 +473,35 @@ const getBarHeight = (value) => {
   const clamped = Math.min(Math.max(numeric, 0), GPA_FULL_SCORE)
   return `${(clamped / GPA_FULL_SCORE) * 100}%`
 }
+
+const formatHours = (minutes) => Number((minutes / 60).toFixed(1))
+
+const goalAlerts = computed(() => {
+  const alerts = []
+  const dailyGoal = Number(studySettings.value.dailyGoal || 0)
+  const weeklyGoal = Number(studySettings.value.weeklyGoal || 0)
+  if (dailyGoal > 0) {
+    const target = dailyGoal * 60
+    if (todayStudyTime.value < target) {
+      alerts.push({
+        title: '今日学习目标未达成',
+        description: `已学习 ${formatHours(todayStudyTime.value)} 小时 / 目标 ${dailyGoal} 小时`
+      })
+    }
+  }
+  if (weeklyGoal > 0) {
+    const target = weeklyGoal * 60
+    if (weeklyStudyMinutes.value < target) {
+      alerts.push({
+        title: '本周学习目标未达成',
+        description: `已累计 ${formatHours(weeklyStudyMinutes.value)} 小时 / 目标 ${weeklyGoal} 小时`
+      })
+    }
+  }
+  return alerts
+})
+
+const displayName = computed(() => store.userInfo.nickname || store.userInfo.username || '同学')
 
 // completed/total/completionRate removed because not used in the current layout
 
@@ -544,6 +609,16 @@ const loadStudyStats = async () => {
   }
 }
 
+const loadWeeklyStats = async () => {
+  try {
+    const resp = await apiTrendStats({ range: 7 })
+    const daily = resp.data?.data?.daily || resp.data?.data?.trend || []
+    weeklyStudyMinutes.value = daily.reduce((sum, item) => sum + Number(item.minutes || 0), 0)
+  } catch (e) {
+    weeklyStudyMinutes.value = 0
+  }
+}
+
 const loadGpaStats = async () => {
   try {
     const resp = await statsGrades()
@@ -558,6 +633,7 @@ onMounted(async () => {
     loadTasks(),
     loadPlans(),
     loadStudyStats(),
+    loadWeeklyStats(),
     loadSummary(),
     loadGpaStats()
   ])
@@ -571,7 +647,7 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-/* 欢迎卡片（已移除） */
+/* 欢迎卡片（占满整行） */
 
 /* 主区域布局 - 三栏固定宽度 */
 .main-area {
@@ -586,11 +662,93 @@ onMounted(async () => {
   gap: 20px;
 }
 
+.welcome-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  background: var(--primary); /* fallback */
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--primary) 75%, #ffffff),
+    color-mix(in srgb, var(--primary) 55%, #ffffff)
+  );
+  color: #fff;
+}
+
+.welcome-left {
+  flex: 1;
+}
+
+.welcome-subtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.welcome-title {
+  margin: 6px 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.welcome-desc {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.welcome-right {
+  width: 55%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.goal-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.goal-alert-item {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.goal-alert-item .alert-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.goal-alert-item .alert-desc {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.goal-alert-empty {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
 .right-column {
   width: 260px; /* 番茄钟宽度减小 */
   display: flex;
   flex-direction: column;
   gap: 20px;
+  justify-content: flex-end;
+  padding-bottom: 20px;
 }
 
 .top-row {

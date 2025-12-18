@@ -22,7 +22,7 @@
         <el-button type="primary" @click="showAddDialog" :icon="Plus">
           新增成绩
         </el-button>
-        <el-button @click="exportData" :icon="Download">
+        <el-button @click="exportData" :icon="Document">
           导出数据
         </el-button>
         <el-button @click="refreshData" :icon="Refresh">
@@ -751,8 +751,40 @@ const handleSelectionChange = (selection) => {
   selectedRows.value = selection
 }
 
+const escapeCsvValue = (value) => {
+  if (value === null || value === undefined) return ''
+  const str = String(value).replace(/"/g, '""')
+  return /[",\n]/.test(str) ? `"${str}"` : str
+}
+
 const exportData = () => {
-  ElMessage.info('导出功能开发中...')
+  if (!grades.value.length) {
+    ElMessage.warning('暂无成绩数据可导出')
+    return
+  }
+
+  const headers = ['课程名称', '课程类型', '学分', '成绩', '绩点', '学期', '学年', '教师']
+  const rows = grades.value.map(item => ([
+    item.course_name,
+    item.course_type,
+    item.credits,
+    item.score,
+    item.grade_point,
+    item.semester,
+    item.academic_year,
+    item.teacher
+  ].map(escapeCsvValue).join(',')))
+
+  const csv = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  link.download = `gpa-grades-${dateStamp}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('成绩数据已导出')
 }
 
 const exportSelected = () => {

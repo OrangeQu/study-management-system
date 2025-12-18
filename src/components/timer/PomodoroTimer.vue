@@ -76,10 +76,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { recordSession } from '@/api/study'
+import { useMainStore } from '@/stores'
 
 // 计时器状态
 const mode = ref('work') // work, break
@@ -88,8 +89,9 @@ const timeLeft = ref(0) // 以秒为单位
 const timerInterval = ref(null)
 
 // 设置
-const workDuration = ref(25)
-const breakDuration = ref(5)
+const store = useMainStore()
+const workDuration = ref(store.studySettings.pomodoroWork || 25)
+const breakDuration = ref(store.studySettings.pomodoroBreak || 5)
 const completedPomodoros = ref(0)
 const sessionStart = ref(null)
 
@@ -210,28 +212,28 @@ const handleSessionComplete = async (finishedMode) => {
   }
 }
 
-// 初始化
+// 同步学习偏好
 onMounted(() => {
-  // 从localStorage加载设置
-  const savedSettings = localStorage.getItem('pomodoroSettings')
-  if (savedSettings) {
-    const settings = JSON.parse(savedSettings)
-    workDuration.value = settings.workDuration || 25
-    breakDuration.value = settings.breakDuration || 5
-    completedPomodoros.value = settings.completedPomodoros || 0
-  }
-  
+  completedPomodoros.value = Number(localStorage.getItem('pomodoroCompleted') || 0)
   initializeTime()
 })
 
-// 保存设置
-onUnmounted(() => {
-  const settings = {
-    workDuration: workDuration.value,
-    breakDuration: breakDuration.value,
-    completedPomodoros: completedPomodoros.value
+watch(() => store.studySettings.pomodoroWork, (val) => {
+  if (typeof val === 'number' && val > 0) {
+    workDuration.value = val
+    if (mode.value === 'work') resetTimer()
   }
-  localStorage.setItem('pomodoroSettings', JSON.stringify(settings))
+})
+
+watch(() => store.studySettings.pomodoroBreak, (val) => {
+  if (typeof val === 'number' && val > 0) {
+    breakDuration.value = val
+    if (mode.value === 'break') resetTimer()
+  }
+})
+
+onUnmounted(() => {
+  localStorage.setItem('pomodoroCompleted', completedPomodoros.value.toString())
 })
 </script>
 
