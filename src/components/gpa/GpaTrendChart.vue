@@ -160,7 +160,7 @@ const updateChart = () => {
     yAxis: {
       type: 'value',
       min: 0,
-      max: 4.0,
+      max: 5,
       interval: 0.5,
       axisLabel: {
         formatter: '{value}',
@@ -209,8 +209,14 @@ const updateChart = () => {
             {
               yAxis: avgGPA.value,
               label: {
-                formatter: '平均: {c}',
-                position: 'end'
+                formatter: ({ value }) => `平均: ${Number(value).toFixed(2)}`,
+                position: 'end',
+                distance: 10,
+                color: '#fb8c4a',
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                padding: [2, 8],
+                borderRadius: 4,
+                fontWeight: 600
               }
             }
           ]
@@ -253,27 +259,26 @@ watch(() => props.gpaData, () => {
   })
 }, { deep: true })
 
-// 生命周期
-onMounted(() => {
-  nextTick(() => {
-    initChart()
-  })
-})
-
-onUnmounted(() => {
-  if (chartInstance) {
-    chartInstance.dispose()
-  }
-})
-
-// 窗口大小变化
 const handleResize = () => {
   if (chartInstance) {
     chartInstance.resize()
   }
 }
 
-window.addEventListener('resize', handleResize)
+// 生命周期
+onMounted(() => {
+  nextTick(() => {
+    initChart()
+  })
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  if (chartInstance) {
+    chartInstance.dispose()
+  }
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>

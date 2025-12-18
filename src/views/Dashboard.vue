@@ -85,21 +85,49 @@
             <el-icon><TrendCharts /></el-icon>
             <h3>GPA趋势</h3>
           </div>
-          <div class="trend-chart">
-            <div class="trend-placeholder">
-              <div class="trend-bar" style="height: 80%"></div>
-              <div class="trend-bar" style="height: 85%"></div>
-              <div class="trend-bar" style="height: 90%"></div>
-              <div class="trend-bar" style="height: 88%"></div>
-              <div class="trend-bar active" style="height: 92%"></div>
+          <div v-if="gpaTrendDisplay.length" class="trend-chart">
+            <div class="gpa-summary">
+              <div class="summary-item">
+                <span class="summary-label">最高</span>
+                <span class="summary-value">{{ formatGpaValue(gpaSummary.max) }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">平均</span>
+                <span class="summary-value">{{ formatGpaValue(gpaSummary.avg) }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">趋势</span>
+                <span class="summary-value" :class="gpaSummary.trend">{{ gpaTrendText }}</span>
+              </div>
+            </div>
+            <div class="trend-bars">
+              <div 
+                v-for="(item, index) in gpaTrendDisplay" 
+                :key="item.semester || index" 
+                class="bar-item"
+              >
+                <span class="bar-value">{{ formatGpaValue(item.gpa) }}</span>
+                <div class="bar-track">
+                  <div 
+                    class="bar-fill" 
+                    :class="{ active: index === gpaTrendDisplay.length - 1 }"
+                    :style="{ height: getBarHeight(item.gpa) }"
+                  />
+                </div>
+              </div>
             </div>
             <div class="trend-labels">
-              <span>大一上</span>
-              <span>大一下</span>
-              <span>大二上</span>
-              <span>大二下</span>
-              <span class="active">大三上</span>
+              <span 
+                v-for="(item, index) in gpaTrendDisplay" 
+                :key="item.semester || `label-${index}`"
+                :class="{ active: index === gpaTrendDisplay.length - 1 }"
+              >
+                {{ formatSemesterLabel(item.semester) }}
+              </span>
             </div>
+          </div>
+          <div v-else class="empty-gpa">
+            <el-empty :image-size="60" description="暂无 GPA 数据" />
           </div>
         </div>
       </div>
@@ -275,6 +303,7 @@ import PlanForm from '@/components/plan/PlanForm.vue'
 import { listTasks, updateTaskStatus as apiUpdateTaskStatus, createTask, updateTask, summaryTasks } from '@/api/tasks'
 import { listPlans, createPlan, updatePlan } from '@/api/plans'
 import { todayStats as apiTodayStats } from '@/api/study'
+import { statsGrades } from '@/api/grades'
 
 const router = useRouter()
 
@@ -288,6 +317,9 @@ const currentPlan = ref(null)
 const tasks = ref([])
 const plans = ref([])
 const todayStudyTime = ref(0)
+const gpaStats = ref({ trend: [] })
+
+const GPA_FULL_SCORE = 5
 
 // welcome card removed — unused computed values omitted
 
@@ -347,6 +379,64 @@ const urgentDeadlines = computed(() => {
     }))
     .slice(0, 3)
 })
+
+const gpaTrendDisplay = computed(() => {
+  if (!gpaStats.value || !Array.isArray(gpaStats.value.trend)) {
+    return []
+  }
+  return [...gpaStats.value.trend]
+    .map(item => ({
+      semester: item.semester || '',
+      gpa: Number(item.gpa) || 0
+    }))
+    .sort((a, b) => a.semester.localeCompare(b.semester))
+    .slice(-5)
+})
+
+const gpaSummary = computed(() => {
+  const values = gpaTrendDisplay.value.map(item => item.gpa)
+  if (values.length === 0) {
+    return { max: 0, avg: 0, trend: 'stable' }
+  }
+  const max = Math.max(...values)
+  const avg = values.reduce((sum, val) => sum + val, 0) / values.length
+  let trend = 'stable'
+  if (values.length > 1) {
+    const last = values[values.length - 1]
+    const prev = values[values.length - 2]
+    if (last > prev + 0.001) trend = 'up'
+    else if (last < prev - 0.001) trend = 'down'
+  }
+  return { max, avg, trend }
+})
+
+const gpaTrendText = computed(() => {
+  switch (gpaSummary.value.trend) {
+    case 'up':
+      return '上升'
+    case 'down':
+      return '下降'
+    default:
+      return '持平'
+  }
+})
+
+const formatGpaValue = (value) => (Number(value) || 0).toFixed(2)
+
+const formatSemesterLabel = (semester = '') => {
+  if (!semester) return '—'
+  const match = semester.match(/(\d{4})-(\d{4})-(\d)/)
+  if (match) {
+    return `${match[1].slice(-2)}-${match[2].slice(-2)}-${match[3]}`
+  }
+  return semester
+}
+
+const getBarHeight = (value) => {
+  const numeric = Number(value) || 0
+  const clamped = Math.min(Math.max(numeric, 0), GPA_FULL_SCORE)
+  return `${(clamped / GPA_FULL_SCORE) * 100}%`
+}
 
 // completed/total/completionRate removed because not used in the current layout
 
@@ -454,8 +544,23 @@ const loadStudyStats = async () => {
   }
 }
 
+const loadGpaStats = async () => {
+  try {
+    const resp = await statsGrades()
+    gpaStats.value = resp?.data?.data || { trend: [] }
+  } catch (e) {
+    gpaStats.value = { trend: [] }
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([loadTasks(), loadPlans(), loadStudyStats(), loadSummary()])
+  await Promise.all([
+    loadTasks(),
+    loadPlans(),
+    loadStudyStats(),
+    loadSummary(),
+    loadGpaStats()
+  ])
 })
 </script>
 
@@ -1059,31 +1164,110 @@ onMounted(async () => {
   padding: 15px;
   background: var(--page-bg);
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.trend-placeholder {
+.gpa-summary {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--nav-active);
+}
+
+.summary-value.up {
+  color: #52c41a;
+}
+
+.summary-value.down {
+  color: #f5222d;
+}
+
+.trend-bars {
+  display: flex;
   align-items: flex-end;
-  height: 140px; /* 放大柱状图占位高度 */
+  gap: 12px;
+  height: 140px;
 }
 
-.trend-bar {
-  width: 12px; /* Reduced width to make bars thinner */
-  background-color: var(--primary);
-  border-radius: 4px;
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
-.trend-bar.active {
-  background-color: var(--accent);
+.bar-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nav-active);
+}
+
+.bar-track {
+  width: 18px;
+  height: 110px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: height 0.3s ease;
+}
+
+.bar-fill.active {
+  background: var(--accent);
 }
 
 .trend-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
+  gap: 8px;
   font-size: 12px;
   color: var(--muted);
+}
+
+.trend-labels span {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trend-labels span.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.empty-gpa {
+  padding: 10px 0;
 }
 
 /* 滚动条样式 */
