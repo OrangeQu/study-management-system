@@ -154,7 +154,7 @@
                   <el-icon><Lock /></el-icon>
                   <h3>修改密码</h3>
                 </div>
-                <el-button type="primary" size="small" @click="showPasswordDialog">
+                <el-button type="primary" size="small" @click="showPasswordDialog = true">
                   修改密码
                 </el-button>
               </div>
@@ -194,15 +194,33 @@
                         <span>{{ device.lastLogin }}</span>
                       </div>
                     </div>
-                    <el-button
-                      v-if="!device.isCurrent"
-                      type="text"
-                      size="small"
-                      @click="logoutDevice(device.id)"
-                    >
-                      退出登录
-                    </el-button>
-                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+
+            <!-- 退出当前账号 -->
+            <div class="security-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <el-icon><SwitchButton /></el-icon>
+                  <h3>退出当前账号</h3>
+                </div>
+                <el-button
+                  type="danger"
+                  plain
+                  size="small"
+                  :loading="loggingOut"
+                  @click="handleLogout"
+                >
+                  退出登录
+                </el-button>
+              </div>
+
+              <div class="card-content">
+                <p>退出后需要重新登录才能继续访问账户数据。</p>
+                <div class="security-info">
+                  <span>当前账号：{{ userInfo.username || '未登录' }}</span>
                 </div>
               </div>
             </div>
@@ -487,6 +505,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   User,
@@ -501,7 +520,8 @@ import {
   Download,
   Delete,
   List,
-  Clock
+  Clock,
+  SwitchButton
 } from '@element-plus/icons-vue'
 import { useMainStore } from '@/stores'
 import {
@@ -509,20 +529,22 @@ import {
   updateProfile as updateProfileApi,
   changePassword as changePasswordApi,
   uploadAvatar as uploadAvatarApi,
-  listDevices,
-  removeDevice
+  listDevices
 } from '@/api/user'
+import { logout as logoutApi } from '@/api/auth'
 import { getPreferences, savePreferences as savePreferencesApi } from '@/api/settings'
 import { deleteCompletedTasks } from '@/api/tasks'
 import { exportData as exportDataApi, clearHistory as clearHistoryApi } from '@/api/data'
 
 const store = useMainStore()
+const router = useRouter()
 const activeTab = ref('profile')
 const savingProfile = ref(false)
 const changingPassword = ref(false)
 const showPasswordDialog = ref(false)
 const savingPreferences = ref(false)
 const avatarInput = ref(null)
+const loggingOut = ref(false)
 
 const userInfo = ref({
   username: store.userInfo.username || '',
@@ -538,14 +560,14 @@ const profileForm = ref({ ...userInfo.value })
 
 const profileRules = {
   username: [
-    { required: true, message: '??????', trigger: 'blur' },
-    { min: 2, max: 10, message: '??????2-10???', trigger: 'blur' }
+    { required: true, message: '用户名不能为空', trigger: 'blur' },
+    { min: 2, max: 10, message: '用户名长度需 2-10 个字符', trigger: 'blur' }
   ],
   email: [
-    { type: 'email', message: '??????????', trigger: 'blur' }
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
   ],
   phone: [
-    { pattern: /^1[3-9]\d{9}$/, message: '?????????', trigger: 'blur' }
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ]
 }
 
@@ -558,18 +580,18 @@ const passwordForm = ref({
 
 const passwordRules = {
   currentPassword: [
-    { required: true, message: '???????', trigger: 'blur' }
+    { required: true, message: '请输入当前密码', trigger: 'blur' }
   ],
   newPassword: [
-    { required: true, message: '??????', trigger: 'blur' },
-    { min: 6, max: 20, message: '?????6-20???', trigger: 'blur' }
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '新密码需 6-20 个字符', trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, message: '??????', trigger: 'blur' },
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
     {
       validator: (rule, value, callback) => {
         if (value !== passwordForm.value.newPassword) {
-          callback(new Error('??????????'))
+          callback(new Error('两次输入的密码不一致'))
         } else {
           callback()
         }
@@ -580,10 +602,10 @@ const passwordRules = {
 }
 
 const themes = ref([
-  { name: 'blue', title: '????', description: '??????', color: '#1890ff' },
-  { name: 'green', title: '????', description: '????', color: '#52c41a' },
-  { name: 'purple', title: '????', description: '????', color: '#722ed1' },
-  { name: 'orange', title: '????', description: '????', color: '#fa8c16' }
+  { name: 'blue', title: '清爽蓝', description: '默认主题，清晰易读', color: '#1890ff' },
+  { name: 'green', title: '活力绿', description: '温和护眼，适合长时间学习', color: '#52c41a' },
+  { name: 'purple', title: '冷静紫', description: '沉稳配色，帮助集中注意力', color: '#722ed1' },
+  { name: 'orange', title: '暖心橙', description: '明快活泼，激发学习动力', color: '#fa8c16' }
 ])
 
 const currentTheme = ref(store.preferences.theme || 'blue')
@@ -604,11 +626,11 @@ const loginDevices = ref([])
 let preferencesReady = false
 let preferenceTimer = null
 
-const lastPasswordChange = computed(() => userInfo.value.updated_at || '????')
+const lastPasswordChange = computed(() => userInfo.value.updated_at || '暂无记录')
 
 const currentThemeName = computed(() => {
   const theme = themes.value.find(t => t.name === currentTheme.value)
-  return theme ? theme.title : '????'
+  return theme ? theme.title : '未选择'
 })
 
 const buildPreferencesPayload = () => ({
@@ -656,7 +678,7 @@ const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
   if (file.size > 2 * 1024 * 1024) {
-    ElMessage.error('????????2MB')
+    ElMessage.error('头像大小不能超过 2MB')
     return
   }
   try {
@@ -666,10 +688,10 @@ const handleAvatarChange = async (event) => {
       userInfo.value.avatar = avatar
       profileForm.value.avatar = avatar
       store.setUserInfo({ ...store.userInfo, avatar })
-      ElMessage.success('??????')
+      ElMessage.success('头像上传成功')
     }
   } catch (error) {
-    ElMessage.error(error.message || '??????')
+    ElMessage.error(error.message || '头像上传失败')
   } finally {
     event.target.value = ''
   }
@@ -683,9 +705,9 @@ const saveProfile = async () => {
     await updateProfileApi(profileForm.value)
     userInfo.value = { ...profileForm.value }
     store.setUserInfo(userInfo.value)
-    ElMessage.success('????????')
+    ElMessage.success('个人资料已更新')
   } catch (error) {
-    ElMessage.error(error.message || '??????????')
+    ElMessage.error(error.message || '保存个人资料失败')
   } finally {
     savingProfile.value = false
   }
@@ -711,11 +733,11 @@ const changePassword = async () => {
     await passwordFormRef.value.validate()
     changingPassword.value = true
     await changePasswordApi(passwordForm.value)
-    ElMessage.success('??????')
+    ElMessage.success('密码修改成功')
     showPasswordDialog.value = false
     resetPasswordForm()
   } catch (error) {
-    ElMessage.error(error.message || '??????')
+    ElMessage.error(error.message || '密码修改失败')
   } finally {
     changingPassword.value = false
   }
@@ -728,27 +750,7 @@ const changeTheme = (themeName) => {
 
 const viewLoginDevices = async () => {
   await loadDevices()
-  ElMessage.info('???????')
-}
-
-const logoutDevice = (deviceId) => {
-  ElMessageBox.confirm(
-    '?????????????',
-    '??????',
-    {
-      confirmButtonText: '??',
-      cancelButtonText: '??',
-      type: 'warning'
-    }
-  ).then(async () => {
-    try {
-      await removeDevice(deviceId)
-      await loadDevices()
-      ElMessage.success('???????')
-    } catch (error) {
-      ElMessage.error(error.message || '????')
-    }
-  })
+  ElMessage.info(`已刷新设备列表（${loginDevices.value.length} 台）`)
 }
 
 const exportData = async (type) => {
@@ -761,48 +763,73 @@ const exportData = async (type) => {
     link.download = `study-data-${type || 'all'}.json`
     link.click()
     window.URL.revokeObjectURL(url)
-    ElMessage.success('??????')
+    ElMessage.success('数据导出成功')
   } catch (error) {
-    ElMessage.error(error.message || '????')
+    ElMessage.error(error.message || '数据导出失败')
   }
 }
 
 const clearCompletedTasks = () => {
   ElMessageBox.confirm(
-    '??????????????',
-    '????',
+    '确定清理所有已完成的任务吗？',
+    '提示',
     {
-      confirmButtonText: '??',
-      cancelButtonText: '??',
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
       type: 'info'
     }
   ).then(async () => {
     try {
       await deleteCompletedTasks()
-      ElMessage.success('????????')
+      ElMessage.success('已清理已完成的任务')
     } catch (error) {
-      ElMessage.error(error.message || '????')
+      ElMessage.error(error.message || '操作失败')
     }
   })
 }
 
 const clearHistory = () => {
   ElMessageBox.confirm(
-    '?????????????',
-    '????',
+    '确定要清空历史记录吗？',
+    '提示',
     {
-      confirmButtonText: '??',
-      cancelButtonText: '??',
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
       type: 'info'
     }
   ).then(async () => {
     try {
       await clearHistoryApi({ type: 'study' })
-      ElMessage.success('???????')
+      ElMessage.success('历史记录已清空')
     } catch (error) {
-      ElMessage.error(error.message || '????')
+      ElMessage.error(error.message || '操作失败')
     }
   })
+}
+
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm('确定退出当前账号吗？', '退出登录', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+
+  try {
+    loggingOut.value = true
+    await logoutApi().catch(() => {})
+  } finally {
+    loggingOut.value = false
+  }
+
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  store.$reset?.()
+  router.replace('/login')
+  ElMessage.success('已退出登录')
 }
 
 const loadProfile = async () => {
@@ -812,7 +839,7 @@ const loadProfile = async () => {
     profileForm.value = { ...userInfo.value }
     store.setUserInfo(userInfo.value)
   } catch (error) {
-    ElMessage.error(error.message || '????????')
+    ElMessage.error(error.message || '加载个人信息失败')
   }
 }
 

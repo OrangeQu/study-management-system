@@ -54,9 +54,7 @@ router.beforeEach(async (to, from, next) => {
   const store = useMainStore()
   const token = localStorage.getItem('token')
 
-  // 临时本地绕过登录（开发用）。在浏览器控制台执行：
-  localStorage.setItem('DISABLE_AUTH','true')
-  // 注意：该开关只影响本地前端，不会修改任何后端接口。
+  // 临时本地绕过登录（开发用），可手动在控制台设置 localStorage.DISABLE_AUTH = 'true'
   const disableAuth = localStorage.getItem('DISABLE_AUTH') === 'true'
   if (disableAuth) return next()
 

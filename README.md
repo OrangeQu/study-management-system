@@ -69,10 +69,11 @@ study-management-system
 详细接口说明请参考 [API.md](API.md)，包含认证、任务/计划 CRUD、成绩统计及导入导出、学习记录、偏好设置、数据导出和 AI 聊天代理协议。
 
 ## 未完成 / 待补足事项
-1. **AI 聊天真实接入**：`ChatController` 已调用 DeepSeek API（参考 `DeepseekService`），只需在 `server-java/.env` 中配置 `DEEPSEEK_API_KEY` 与 `DEEPSEEK_API_BASE`，即可在本地体验实时 AI 回复。
-2. **学习统计未接入真实数据**：`StudyChart` 仍使用硬编码数组，未调用 `/api/study/stats/trend`；`PomodoroTimer` 也没有把专注时长上报 `/api/study/sessions`，导致后端学习统计始终为空。
-3. **敏感配置直接写入仓库**：`server-java/src/main/resources/application.yml` 里包含数据库口令、JWT Secret、DeepSeek Key，须尽快迁移到环境变量或安全配置中心。
-4. **数据库结构缺乏沉淀**：项目未引入 Liquibase/Flyway，也没有 SQL 初始化脚本，新环境完全依赖 Hibernate 自动建表，缺少索引、示例数据说明。
-5. **缺少测试与 CI**：前后端都没有单元/集成测试，也没有自动化流程去执行 `npm run build` / `mvn test`，在上线前需要补齐关键路径的测试与流水线。
+1. **设置页文案全部乱码**：`src/views/Settings.vue` 中大量表单提示、校验文案与消息文本已经被 `????` 取代，发布后页面会显示乱码，用户无法理解提示。需要修复文件编码或文案源头，再补齐正确的中英文提示。
+2. **路由守卫强制跳过认证**：`src/router/index.js:45` 直接在 `beforeEach` 内写死 `localStorage.setItem('DISABLE_AUTH','true')`，导致所有受保护页面无需登录即可访问，上线前必须去掉该语句并通过环境变量或构建配置来控制开发模式绕过。
+3. **成绩导出仍是占位**：`src/views/GradeData.vue:755` 的 `exportData` 仅弹出“导出功能开发中...”提示，未调用 `src/api/grades.js` 的 `exportGrades` 接口。需要实现真实的文件下载、选中行导出以及失败提示。
+4. **敏感凭据直接随仓库下发**：`server-java/.env` 当前带有真实的数据库账号、JWT Secret 与 DeepSeek API Key，仓库一旦共享这些凭据就会失效。需要立刻撤换密钥、停止追踪 `.env`，改用 `.env.example + 环境变量` 与安全密钥管理。
+5. **数据库结构缺乏版本管理**：后端依赖 `spring.jpa.hibernate.ddl-auto=update` 自动建表，没有 Flyway/Liquibase 或 SQL 迁移脚本，新环境的表结构、索引、示例数据均不可追溯，后续演进与回滚会非常困难。
+6. **测试与流水线完全缺失**：前端无单元/端到端测试，后端 `server-java` 也没有 `src/test/java`，并且仓库中没有任意 CI（如 GitHub Actions）去执行 `npm run build`、`npm run lint`、`mvn test`。发布前需要补齐最基础的回归用例和自动化构建。
 
 README 会随着功能完善持续更新，欢迎在完成上述事项后补充最新状态。

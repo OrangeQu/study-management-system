@@ -4,7 +4,6 @@ import com.example.studymanagement.model.User;
 import com.example.studymanagement.repository.UserRepository;
 import com.example.studymanagement.service.LoginDeviceService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -43,11 +42,17 @@ public class UserController {
     }
 
     @PutMapping("/password")
-    public ResponseEntity<?> changePassword(@AuthenticationPrincipal User user, @RequestBody PasswordRequest req) {
-        if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPassword())) {
-            return ResponseEntity.badRequest().body(Map.of("code", 400, "message", "当前密码错误", "data", null));
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal User user,
+                                            @RequestBody Map<String, String> body) {
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+        if (currentPassword == null || currentPassword.isBlank() || newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(errorResponse("密码不能为空"));
         }
-        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.badRequest().body(errorResponse("当前密码错误"));
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return ResponseEntity.ok(Map.of("code", 0, "message", "ok", "data", true));
     }
@@ -103,11 +108,11 @@ public class UserController {
         private String email;
     }
 
-    @Data
-    public static class PasswordRequest {
-        @NotBlank
-        private String currentPassword;
-        @NotBlank
-        private String newPassword;
+    private Map<String, Object> errorResponse(String message) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("code", 400);
+        map.put("message", message);
+        map.put("data", null);
+        return map;
     }
 }

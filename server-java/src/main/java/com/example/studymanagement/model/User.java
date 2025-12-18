@@ -24,6 +24,8 @@ public class User implements UserDetails {
     private String nickname;
     private String gender;
     private String phone;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String avatar;
     private String role = "USER";
     private LocalDateTime createdAt;
