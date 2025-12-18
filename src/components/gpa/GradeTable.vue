@@ -67,7 +67,7 @@
       </el-table-column>
       
       <!-- 成绩列 -->
-      <el-table-column prop="score" label="成绩" width="100" align="center" sortable>
+      <el-table-column prop="score" label="成绩" width="100" align="center" sortable="custom">
         <template #default="{ row }">
           <el-tag 
             :type="getScoreType(row.score)"
@@ -80,7 +80,7 @@
       </el-table-column>
       
       <!-- 绩点列 -->
-      <el-table-column prop="grade_point" label="绩点" width="100" align="center" sortable>
+      <el-table-column prop="grade_point" label="绩点" width="100" align="center" sortable="custom">
         <template #default="{ row }">
           <div class="grade-point-cell">
             <span class="grade-point-value">{{ row.grade_point.toFixed(2) }}</span>
@@ -92,7 +92,7 @@
       </el-table-column>
       
       <!-- 学期信息列 -->
-      <el-table-column prop="semester" label="学期" width="120" sortable>
+      <el-table-column prop="semester" label="学期" width="120" sortable="custom">
         <template #default="{ row }">
           <div class="semester-cell">
             <el-tag size="small" type="info" class="semester-tag">
@@ -178,7 +178,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'  // 移除未使用的watch
+import { ref, computed, nextTick } from 'vue'
 import { Edit, Delete } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -346,10 +346,24 @@ const getSelectedRows = () => {
   return selectedRows.value
 }
 
+const applySort = (sort) => {
+  if (!sort || !sort.prop) return
+  currentSort.value = {
+    prop: sort.prop,
+    order: sort.order || 'descending'
+  }
+  nextTick(() => {
+    if (tableRef.value?.sort) {
+      tableRef.value.sort(currentSort.value.prop, currentSort.value.order)
+    }
+  })
+}
+
 // 暴露方法给父组件
 defineExpose({
   clearSelection,
-  getSelectedRows
+  getSelectedRows,
+  applySort
 })
 </script>
 

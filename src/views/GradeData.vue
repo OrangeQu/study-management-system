@@ -134,6 +134,7 @@
           :show-pagination="true"
           :page-size="pageSize"
           :default-sort="{ prop: 'semester', order: 'descending' }"
+          :controlled-sort="tableSortConfig"
           @edit="handleEditGrade"
           @delete="handleDeleteGrade"
           @add="showAddDialog"
@@ -348,7 +349,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,
@@ -435,6 +436,18 @@ const dialogTitle = computed(() => {
 const totalRecords = computed(() => grades.value.length || stats.value.totalCourses || 0)
 
 const selectedCount = computed(() => selectedRows.value.length)
+
+const tableSortConfig = computed(() => {
+  const map = {
+    semester_desc: { prop: 'semester', order: 'descending' },
+    semester_asc: { prop: 'semester', order: 'ascending' },
+    score_desc: { prop: 'score', order: 'descending' },
+    score_asc: { prop: 'score', order: 'ascending' },
+    gpa_desc: { prop: 'grade_point', order: 'descending' },
+    gpa_asc: { prop: 'grade_point', order: 'ascending' }
+  }
+  return map[tableSort.value] || map.semester_desc
+})
 
 const filteredGrades = computed(() => {
   let filtered = [...grades.value]
@@ -725,6 +738,12 @@ const handleSortChange = (sort) => {
   if (!sort) return
   if (typeof sort === 'string') {
     tableSort.value = sort
+    nextTick(() => {
+      const config = tableSortConfig.value
+      if (gradeTable.value?.applySort && config) {
+        gradeTable.value.applySort(config)
+      }
+    })
     return
   }
 
@@ -857,6 +876,12 @@ onMounted(async () => {
   await Promise.all([loadGrades(), loadStats()])
   gradeForm.value.semester = currentSemester.value
   gradeForm.value.academic_year = getCurrentAcademicYear()
+  nextTick(() => {
+    const config = tableSortConfig.value
+    if (gradeTable.value?.applySort && config) {
+      gradeTable.value.applySort(config)
+    }
+  })
 })
 </script>
 
