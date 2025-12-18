@@ -11,6 +11,7 @@
       <!-- 左侧导航 -->
       <div class="settings-nav">
         <el-menu
+          mode="horizontal"
           :default-active="activeTab"
           class="settings-menu"
           @select="handleMenuSelect"
@@ -828,7 +829,7 @@ const loadPreferences = async () => {
       enableAnimation: prefs.enableAnimation ?? enableAnimation.value,
       studySettings: {
         ...studySettings.value,
-        ...(prefs.studySettings || {})
+        ...(prefs.studySettings)
       }
     }
     currentTheme.value = merged.theme
@@ -861,9 +862,11 @@ onMounted(async () => {
 
 
 <style scoped>
-/* 固定宽度布局 */
+
+/* 固定宽度布局（响应式） */
 .settings-page {
-  width: 1200px;
+  background: #ffffff; /* 纯白背景 */
+  width: 900px;
   margin: 0 auto;
   padding: 20px 0;
   min-height: 100vh;
@@ -878,43 +881,76 @@ onMounted(async () => {
 .page-header h1 {
   margin: 0 0 10px 0;
   font-size: 24px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .header-subtitle {
   font-size: 14px;
-  color: #666;
+  color: var(--muted);
 }
 
 /* 设置容器 */
 .settings-container {
   display: flex;
+  flex-direction: column; /* 菜单放顶部，内容在下 */
   gap: 20px;
   width: 100%;
 }
 
 /* 左侧导航 */
 .settings-nav {
-  width: 220px;
+  width: 100%;
   flex-shrink: 0;
+  margin-bottom: 6px;
 }
 
 .settings-menu {
   border-right: none;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  background: var(--card-bg, #ffffff);
+  box-shadow: var(--soft-shadow, 0 6px 16px rgba(43,50,80,0.04));
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* 附件颜色变量：主色为青绿色，便于全局替换 */
+  --menu-primary: var(--menu-primary, #2ee7c7);
+  --menu-accent: var(--menu-accent, #9ff3ea);
 }
 
 .settings-menu .el-menu-item {
-  height: 50px;
-  line-height: 50px;
-  font-size: 14px;
+  height: 56px;
+  line-height: 56px;
+  font-size: 15px;
+  color: var(--nav-active, #2b3250);
+  border-radius: 8px;
+  margin: 0 6px;
+  padding: 0 14px;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
 .settings-menu .el-menu-item.is-active {
-  color: #1890ff;
-  background-color: #f0f9ff;
+  /* 改为白底、文字使用全局绿色，并带有底部绿色下划线（更接近图片） */
+  background-color: #ffffff;
+  color: var(--primary, var(--menu-primary));
+  border-bottom: 3px solid var(--primary, var(--menu-primary));
+  box-shadow: 0 6px 0 rgba(0,0,0,0.03);
+}
+
+.settings-menu .el-menu-item:hover {
+  background: linear-gradient(90deg, var(--menu-primary), var(--menu-accent));
+  color: #fff;
+}
+
+.settings-menu .el-menu-item .el-icon svg {
+  color: var(--accent) !important; /* 图标保持全局 accent 颜色 */
+}
+
+/* 某些 Element Plus 内部结构会在子元素上覆盖文字颜色，下面强制把选中文字设为全局绿色 */
+.settings-menu .el-menu-item.is-active span,
+.settings-menu .el-menu-item.is-active .el-menu-item__content,
+.settings-menu .el-menu-item.is-active > * {
+  color: var(--primary, var(--menu-primary)) !important;
 }
 
 /* 右侧内容 */
@@ -924,10 +960,10 @@ onMounted(async () => {
 }
 
 .settings-section {
-  background: white;
-  border-radius: 8px;
+  background: #ffffff; /* 卡片背景设置为纯白 */
+  border-radius: 12px;
   padding: 25px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--soft-shadow);
   width: 100%;
 }
 
@@ -941,12 +977,12 @@ onMounted(async () => {
 .section-header h2 {
   margin: 0 0 8px 0;
   font-size: 18px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .section-description {
   font-size: 14px;
-  color: #666;
+  color: var(--muted);
 }
 
 /* 个人信息 */
@@ -965,7 +1001,7 @@ onMounted(async () => {
 }
 
 .user-avatar {
-  border: 2px solid #f0f0f0;
+  border: 2px solid rgba(44,199,183,0.12);
 }
 
 .avatar-actions {
@@ -976,7 +1012,7 @@ onMounted(async () => {
 
 .avatar-tip {
   font-size: 12px;
-  color: #999;
+  color: var(--muted);
 }
 
 /* 表单 */
@@ -993,12 +1029,12 @@ onMounted(async () => {
 .form-section h3 {
   margin: 0 0 20px 0;
   font-size: 16px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .form-tip {
   font-size: 12px;
-  color: #999;
+  color: var(--muted);
   margin-left: 10px;
 }
 
@@ -1018,10 +1054,10 @@ onMounted(async () => {
 }
 
 .security-card {
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border: 1px solid rgba(43,50,80,0.06);
+  border-radius: 10px;
   padding: 20px;
-  background: #fafafa;
+  background: #ffffff; /* 纯白，去掉渐变 */
 }
 
 .security-card .card-header {
@@ -1068,9 +1104,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background: white;
-  border: 1px solid #f0f0f0;
-  border-radius: 6px;
+  background: #fff;
+  border: 1px solid rgba(43,50,80,0.04);
+  border-radius: 8px;
   margin-bottom: 10px;
 }
 
@@ -1116,17 +1152,17 @@ onMounted(async () => {
 .appearance-card .card-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .current-theme {
   font-size: 14px;
-  color: #666;
+  color: var(--muted);
 }
 
 .theme-name {
-  color: #1890ff;
-  font-weight: 500;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* 主题颜色 - 改为2列布局 */
@@ -1141,31 +1177,34 @@ onMounted(async () => {
   align-items: center;
   gap: 15px;
   padding: 15px;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border: 1px solid rgba(43,50,80,0.06);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.25s;
+  background: linear-gradient(180deg,#fff,#fbfdff);
 }
 
 .theme-item:hover {
-  border-color: #1890ff;
-  background: #fafafa;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(43,50,80,0.06);
 }
 
 .theme-item.active {
-  border-color: #1890ff;
-  background: #f0f9ff;
+  border-color: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  box-shadow: 0 8px 24px rgba(43,50,80,0.06);
 }
 
 .theme-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 18px;
+  box-shadow: 0 6px 16px rgba(43,50,80,0.04);
 }
 
 .theme-info {
@@ -1173,14 +1212,14 @@ onMounted(async () => {
 }
 
 .theme-title {
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 4px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .theme-desc {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 
 /* 界面设置 */
@@ -1205,13 +1244,13 @@ onMounted(async () => {
 .setting-label {
   width: 120px;
   font-size: 14px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .setting-desc {
   flex: 1;
   font-size: 12px;
-  color: #999;
+  color: var(--muted);
   margin-left: 10px;
 }
 
@@ -1247,39 +1286,10 @@ onMounted(async () => {
 }
 
 .data-card {
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border: 1px solid rgba(43,50,80,0.06);
+  border-radius: 10px;
   padding: 20px;
 }
 
-.data-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-  border: none;
-}
-
-.data-card .card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.data-card .card-title h3 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.data-card .card-content p {
-  margin: 0 0 15px 0;
-  color: #666;
-}
-
-.export-options,
-.delete-options {
-  display: flex;
-  gap: 10px;
-}
+/* 小号强调色按钮 */
 </style>

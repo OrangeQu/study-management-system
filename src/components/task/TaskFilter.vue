@@ -1,5 +1,5 @@
 <template>
-  <div class="task-filter">
+  <div class="task-filter card-tone card-tone--purple">
     <!-- 搜索框 -->
     <div class="search-box">
       <el-input

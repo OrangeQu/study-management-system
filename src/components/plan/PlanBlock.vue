@@ -3,6 +3,7 @@
     class="plan-block" 
     :class="[
       `source-${plan.source}`,
+      toneClass,
       { 
         'is-completed': plan.completed,
         'is-editing': isEditing,
@@ -254,15 +255,6 @@ const priorityTagType = computed(() => {
 const blockStyles = computed(() => {
   const styles = {}
   
-  // 根据来源设置背景色
-  const colors = {
-    'ai': 'linear-gradient(135deg, #67c23a 0%, #95d475 100%)',
-    'manual': 'linear-gradient(135deg, #409eff 0%, #79bbff 100%)',
-    'fixed': 'linear-gradient(135deg, #e6a23c 0%, #f0c78a 100%)'
-  }
-  
-  styles.background = colors[props.plan.source] || '#909399'
-  
   // 如果已完成，降低透明度
   if (props.plan.completed) {
     styles.opacity = '0.7'
@@ -275,6 +267,15 @@ const blockStyles = computed(() => {
   }
   
   return styles
+})
+
+const toneClass = computed(() => {
+  const map = {
+    ai: 'card-tone card-tone--green',
+    manual: 'card-tone card-tone--purple',
+    fixed: 'card-tone card-tone--peach'
+  }
+  return map[props.plan.source] || ''
 })
 
 // 事件处理
@@ -382,7 +383,7 @@ const startResize = (direction) => {
   right: 5px;
   border-radius: 8px;
   padding: 12px;
-  color: white;
+  color: var(--nav-active);
   cursor: pointer;
   transition: all 0.3s ease;
   user-select: none;
@@ -404,30 +405,30 @@ const startResize = (direction) => {
 }
 
 .plan-block.is-selected {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43,50,80,0.06);
 }
 
 .plan-block.is-editing {
-  border-color: #52c41a;
-  box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.2);
+  border-color: var(--soft-green-600);
+  box-shadow: 0 0 0 3px rgba(43,50,80,0.06);
 }
 
 .plan-block.is-completed {
-  background: #f0f0f0 !important;
-  color: #999;
+  background: var(--page-bg) !important;
+  color: var(--muted);
 }
 
 .plan-block.source-ai {
-  background: linear-gradient(135deg, #67c23a 0%, #95d475 100%);
+  background: linear-gradient(135deg, var(--soft-green-600) 0%, var(--soft-green) 100%);
 }
 
 .plan-block.source-manual {
-  background: linear-gradient(135deg, #409eff 0%, #79bbff 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, rgba(44,199,183,0.18) 100%);
 }
 
 .plan-block.source-fixed {
-  background: linear-gradient(135deg, #e6a23c 0%, #f0c78a 100%);
+  background: linear-gradient(135deg, var(--soft-peach-600) 0%, var(--soft-peach) 100%);
 }
 
 .block-content {
@@ -466,7 +467,7 @@ const startResize = (direction) => {
 }
 
 .completed-icon {
-  color: #52c41a;
+  color: var(--soft-green-600);
 }
 
 .title-text {
@@ -531,7 +532,7 @@ const startResize = (direction) => {
 .action-btn {
   background: rgba(255, 255, 255, 0.9);
   border: none;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .action-btn:hover {
@@ -556,7 +557,7 @@ const startResize = (direction) => {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 4px;
   padding: 2px;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .loading-overlay {
@@ -570,7 +571,7 @@ const startResize = (direction) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #333;
+  color: var(--nav-active);
   border-radius: 8px;
   z-index: 10;
 }
@@ -579,7 +580,7 @@ const startResize = (direction) => {
   animation: rotate 1s linear infinite;
   margin-bottom: 8px;
   font-size: 20px;
-  color: #409eff;
+  color: var(--primary);
 }
 
 @keyframes rotate {
@@ -604,7 +605,7 @@ const startResize = (direction) => {
   justify-content: center;
   border-radius: 8px;
   z-index: 10;
-  color: #333;
+  color: var(--nav-active);
 }
 
 .confirm-text {

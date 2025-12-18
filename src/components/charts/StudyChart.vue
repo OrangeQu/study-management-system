@@ -157,7 +157,7 @@ const loadStats = async () => {
     const resp = await trendStats()
     stats.value = {
       ...defaultStats(),
-      ...(resp.data?.data || {})
+      ...(resp.data?.data)
     }
     renderChart()
   } catch (error) {
@@ -181,6 +181,20 @@ const renderChart = () => {
   }
 }
 
+// Helper: read global CSS variables with fallback
+const getCssVar = (name, fallback) => {
+  try {
+    if (typeof window === 'undefined') return fallback
+    const style = getComputedStyle(document.documentElement)
+    const v = style.getPropertyValue(name)
+    return v ? v.trim() : fallback
+  } catch (e) {
+    return fallback
+  }
+}
+
+const VAR_PRIMARY = () => getCssVar('--primary', '#1890ff')
+
 const renderDailyChart = () => {
   chartOption.value = {
     title: {
@@ -188,12 +202,15 @@ const renderDailyChart = () => {
       left: 'center',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
+        fontWeight: 'normal',
+        color: getCssVar('--nav-active', '#333')
       }
     },
     tooltip: {
       trigger: 'axis',
-      formatter: '{b}<br/>学习时长：{c}小时'
+      formatter: '{b}<br/>学习时长：{c}小时',
+      backgroundColor: getCssVar('--card-bg', '#ffffff'),
+      textStyle: { color: getCssVar('--nav-active', '#333') }
     },
     grid: {
       left: '3%',
@@ -207,7 +224,7 @@ const renderDailyChart = () => {
       data: dailySeries.value.map(item => item.label),
       axisLine: {
         lineStyle: {
-          color: '#d9d9d9'
+          color: getCssVar('--page-border-color', '#d9d9d9')
         }
       }
     },
@@ -216,13 +233,13 @@ const renderDailyChart = () => {
       name: '小时',
       axisLine: {
         lineStyle: {
-          color: '#d9d9d9'
+          color: getCssVar('--page-border-color', '#d9d9d9')
         }
       },
       splitLine: {
         lineStyle: {
           type: 'dashed',
-          color: '#f0f0f0'
+          color: getCssVar('--split-line', '#f0f0f0')
         }
       }
     },
@@ -234,10 +251,10 @@ const renderDailyChart = () => {
         smooth: true,
         lineStyle: {
           width: 3,
-          color: '#1890ff'
+          color: VAR_PRIMARY()
         },
         itemStyle: {
-          color: '#1890ff'
+          color: VAR_PRIMARY()
         },
         areaStyle: {
           color: {
@@ -271,7 +288,8 @@ const renderSubjectChart = () => {
       left: 'center',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
+        fontWeight: 'normal',
+        color: getCssVar('--nav-active', '#333')
       }
     },
     tooltip: {
@@ -283,7 +301,8 @@ const renderSubjectChart = () => {
       left: 'left',
       top: 'center',
       itemHeight: 12,
-      itemWidth: 12
+      itemWidth: 12,
+      textStyle: { color: getCssVar('--muted', '#666') }
     },
     series: [
       {
@@ -294,7 +313,7 @@ const renderSubjectChart = () => {
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 6,
-          borderColor: '#fff',
+          borderColor: getCssVar('--card-bg', '#fff'),
           borderWidth: 2
         },
         label: {
@@ -331,7 +350,8 @@ const renderCompletionChart = () => {
       left: 'center',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
+        fontWeight: 'normal',
+        color: getCssVar('--nav-active', '#333')
       }
     },
     tooltip: {
@@ -341,7 +361,8 @@ const renderCompletionChart = () => {
     legend: {
       orient: 'horizontal',
       bottom: 0,
-      left: 'center'
+      left: 'center',
+      textStyle: { color: getCssVar('--muted', '#666') }
     },
     series: [
       {
@@ -352,7 +373,7 @@ const renderCompletionChart = () => {
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 4,
-          borderColor: '#fff',
+          borderColor: getCssVar('--card-bg', '#fff'),
           borderWidth: 2
         },
         label: {
@@ -413,8 +434,18 @@ watch(activeChart, () => {
 
 .chart-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--nav-active);
   font-size: 18px;
+}
+
+/* 将选中时的分段按钮颜色改为全局主色 */
+.chart-tabs :deep(.el-radio-button.is-active) {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+.chart-tabs :deep(.el-radio-button.is-active) .el-radio-button__inner {
+  color: #ffffff !important;
 }
 
 .chart-container {
@@ -446,12 +477,12 @@ watch(activeChart, () => {
 .stat-value {
   font-size: 24px;
   font-weight: bold;
-  color: #1890ff;
+  color: var(--primary);
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 </style>

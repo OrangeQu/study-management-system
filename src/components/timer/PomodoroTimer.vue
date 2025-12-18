@@ -10,7 +10,7 @@
       </div>
     </div>
     
-    <div class="timer-display" :class="{ 'warning': minutes < 5 && minutes > 0 }">
+    <div class="timer-display" :class="{ work: mode === 'work' }" :style="{ backgroundColor: 'var(--accent)' }">
       <div class="time-text">
         {{ minutes.toString().padStart(2, '0') }}:{{ seconds.toString().padStart(2, '0') }}
       </div>
@@ -238,16 +238,11 @@ onUnmounted(() => {
 <style scoped>
 .pomodoro-timer {
   width: 100%;
-  height: 100%;
-}
-
-.pomodoro-timer {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f0f0f0;
-  height: 100%;
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: var(--soft-shadow);
+  border: 1px solid rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
 }
@@ -256,61 +251,74 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   flex-shrink: 0;
 }
 
 .timer-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--nav-active);
   font-size: 18px;
 }
 
 .timer-display {
   text-align: center;
-  margin: 20px 0;
-  padding: 30px 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  transition: all 0.3s;
-  flex-shrink: 0;
+  margin: 12px 0;
+  padding: 18px 0;
+  border-radius: 10px;
+  background-color: var(--accent); /* Replace gradient with solid orange */
+  color: #fff;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 auto; /* allow this area to expand to fill pomodoro height */
 }
 
 .timer-display.warning {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+  background: var(--accent);
+}
+
+/* 专注（橙色）模式下高度加高，数字更突出 */
+.timer-display.work {
+  padding: 28px 0;
+  min-height: 180px;
+}
+.timer-display.work .time-text {
+  font-size: 56px;
 }
 
 .time-text {
-  font-size: 60px;
+  font-size: 48px;
   font-weight: bold;
   font-family: 'Courier New', monospace;
   line-height: 1;
-  margin-bottom: 10px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  margin-bottom: 8px;
+  text-shadow: 0 1px 6px rgba(43,50,80,0.10);
 }
 
 .mode-text {
-  font-size: 16px;
-  opacity: 0.9;
+  font-size: 14px;
+  opacity: 0.95;
 }
 
 .timer-controls {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin: 20px 0;
+  gap: 12px;
+  margin: 12px 0;
   flex-shrink: 0;
 }
 
 .timer-controls button {
-  min-width: 100px;
+  min-width: 88px;
 }
 
 .timer-settings {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.04);
   flex-shrink: 0;
 }
 
@@ -319,12 +327,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 15px;
-  color: #666;
+  margin-bottom: 20px;
+  color: var(--muted);
 }
 
 .setting-item span:first-child {
-  min-width: 80px;
+  min-width: 70px;
   text-align: right;
 }
 
@@ -336,13 +344,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
-  padding: 12px;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 8px;
+  background: var(--soft-green);
+  border: 1px solid var(--soft-green-600);
   border-radius: 6px;
-  color: #52c41a;
+  color: var(--soft-green-600);
   font-weight: 500;
 }
 

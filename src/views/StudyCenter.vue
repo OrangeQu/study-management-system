@@ -13,8 +13,11 @@
     </div>
 
     <div class="main-content">
+
+      
+
       <div class="left-panel">
-        <div class="section today-plan">
+        <div class="section today-plan card-tone card-tone--peach">
           <div class="section-header">
             <h2>今日学习计划</h2>
             <div class="plan-stats">
@@ -73,104 +76,13 @@
           </div>
         </div>
 
-        <div class="section task-management">
-          <div class="section-header">
-            <h2>任务管理</h2>
-            <div class="task-header-actions">
-              <TaskFilter 
-                v-model:search="searchKeyword"
-                v-model:status="filterStatus"
-                v-model:priority="filterPriority"
-                v-model:type="filterType"
-              />
-              <el-button size="small" @click="showTaskForm('create')">
-                新建任务
-              </el-button>
-            </div>
-          </div>
-
-          <div class="task-content" ref="taskContent">
-            <div v-if="filteredTasks.length === 0" class="empty-task">
-              <el-empty description="暂无任务" :image-size="60">
-                <el-button size="small" @click="showTaskForm('create')">创建第一个任务</el-button>
-              </el-empty>
-            </div>
-            
-            <div v-else class="task-list">
-              <div 
-                v-for="task in filteredTasks" 
-                :key="task.id"
-                class="task-item"
-                :class="{
-                  'task-done': task.status === 'done',
-                  'task-doing': task.status === 'doing'
-                }"
-              >
-                <div class="task-checkbox">
-                  <el-checkbox 
-                    v-model="task.completed" 
-                    @change="toggleTaskStatus(task)"
-                  />
-                </div>
-                
-                <div class="task-info">
-                  <div class="task-header">
-                    <span class="task-title" :class="{ completed: task.status === 'done' }">
-                      {{ task.title }}
-                    </span>
-                    <div class="task-tags">
-                      <el-tag 
-                        size="small" 
-                        :type="getPriorityType(task.priority)"
-                      >
-                        {{ getPriorityText(task.priority) }}
-                      </el-tag>
-                      <el-tag size="small" type="info">{{ task.type }}</el-tag>
-                    </div>
-                  </div>
-                  
-                  <div class="task-details">
-                    <div v-if="task.description" class="task-description">
-                      {{ task.description }}
-                    </div>
-                    <div class="task-deadline">
-                      <el-icon size="12"><Clock /></el-icon>
-                      <span :class="{ urgent: isUrgent(task.deadline) }">
-                        {{ formatDeadline(task.deadline) }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="task-actions">
-                  <el-button 
-                    type="text" 
-                    size="small" 
-                    @click="editTask(task)"
-                    :icon="Edit"
-                  />
-                  <el-button 
-                    type="text" 
-                    size="small" 
-                    @click="deleteTask(task.id)"
-                    :icon="Delete"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
+        
+        
       </div>
 
       <div class="right-panel">
-        <div class="section stats-panel">
-          <div class="section-header">
-            <h2>学习统计</h2>
-          </div>
-          <TaskStats :tasks="tasks" :plans="todayPlans" />
-        </div>
-
-        <div class="section ai-chatroom">
+        <div class="section ai-chatroom card-tone card-tone--green">
           <div class="section-header">
             <h2>AI学习助手</h2>
           </div>
@@ -217,7 +129,141 @@
           </div>
         </div>
       </div>
+
+      <!-- 将任务管理放在今日计划与 AI 聊天室下面，横跨整页 -->
+      <div class="section task-management card-tone card-tone--purple">
+        <div class="section-header">
+          <h2>任务管理</h2>
+          <div class="task-header-actions">
+            <TaskFilter 
+              v-model:search="searchKeyword"
+              v-model:status="filterStatus"
+              v-model:priority="filterPriority"
+              v-model:type="filterType"
+            />
+            <el-button size="small" @click="showTaskForm('create')">
+              新建任务
+            </el-button>
+          </div>
+        </div>
+
+        <div class="task-content" ref="taskContent">
+          <div v-if="filteredTasks.length === 0" class="empty-task">
+            <el-empty description="暂无任务" :image-size="60">
+              <el-button size="small" @click="showTaskForm('create')">创建第一个任务</el-button>
+            </el-empty>
+          </div>
+          
+          <div v-else class="task-list">
+            <div 
+              v-for="task in filteredTasks" 
+              :key="task.id"
+              class="task-item"
+              :class="{
+                'task-done': task.status === 'done',
+                'task-doing': task.status === 'doing'
+              }"
+            >
+              <div class="task-checkbox">
+                <el-checkbox 
+                  v-model="task.completed" 
+                  @change="toggleTaskStatus(task)"
+                />
+              </div>
+              
+              <div class="task-info">
+                <div class="task-header">
+                  <span class="task-title" :class="{ completed: task.status === 'done' }">
+                    {{ task.title }}
+                  </span>
+                  <div class="task-tags">
+                    <el-tag 
+                      size="small" 
+                      :type="getPriorityType(task.priority)"
+                    >
+                      {{ getPriorityText(task.priority) }}
+                    </el-tag>
+                    <el-tag size="small" type="info">{{ task.type }}</el-tag>
+                  </div>
+                </div>
+                
+                <div class="task-details">
+                  <div v-if="task.description" class="task-description">
+                    {{ task.description }}
+                  </div>
+                  <div class="task-deadline">
+                    <el-icon size="12"><Clock /></el-icon>
+                    <span :class="{ urgent: isUrgent(task.deadline) }">
+                      {{ formatDeadline(task.deadline) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="task-actions">
+                <el-button 
+                  type="text" 
+                  size="small" 
+                  @click="editTask(task)"
+                  :icon="Edit"
+                />
+                <el-button 
+                  type="text" 
+                  size="small" 
+                  @click="deleteTask(task.id)"
+                  :icon="Delete"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+      <!-- 学习总览卡片：左侧学习统计，右侧若干数据卡 -->
+      <div class="section learning-overview">
+        <div class="overview-grid">
+          <div class="overview-left">
+            <div class="chart-wrapper">
+              <StudyChart />
+            </div>
+          </div>
+
+          <div class="overview-right">
+            <div class="stat-card stat-card--teal">
+              <div class="stat-top">
+                <div class="stat-icon">🕒</div>
+                <div class="stat-title">总学习时长</div>
+              </div>
+              <div class="stat-value">{{ totalStudyDuration }}</div>
+            </div>
+
+            <div class="stat-card stat-card--green">
+              <div class="stat-top">
+                <div class="stat-icon">⏱</div>
+                <div class="stat-title">今日学习时长</div>
+              </div>
+              <div class="stat-value">{{ todayStudyDuration }}</div>
+            </div>
+
+            <div class="stat-card stat-card--blue">
+              <div class="stat-top">
+                <div class="stat-icon">📝</div>
+                <div class="stat-title">今日任务数量</div>
+              </div>
+              <div class="stat-value">{{ todayTaskCount }}</div>
+            </div>
+
+            <div class="stat-card stat-card--purple">
+              <div class="stat-top">
+                <div class="stat-icon">✅</div>
+                <div class="stat-title">已完成任务总量</div>
+              </div>
+              <div class="stat-value">{{ completedTaskCount }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     <TaskForm
       v-model="showTaskDialog"
@@ -244,7 +290,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { Clock, Edit, Delete } from '@element-plus/icons-vue'
 import TaskFilter from '@/components/task/TaskFilter.vue'
-import TaskStats from '@/components/task/TaskStats.vue'
+import StudyChart from '@/components/charts/StudyChart.vue'
 import TaskForm from '@/components/task/TaskForm.vue'
 import PlanForm from '@/components/plan/PlanForm.vue'
 import { listTasks, createTask, updateTask, deleteTask as apiDeleteTask, updateTaskStatus } from '@/api/tasks'
@@ -291,6 +337,69 @@ const filteredTasks = computed(() => {
     return matchesSearch && matchesStatus && matchesPriority && matchesType
   })
 })
+
+// 今日学习时长（从 todayPlans 的 time_start/time_end 计算）
+const todayStudyMinutes = computed(() => {
+  let total = 0
+  todayPlans.value.forEach(p => {
+    if (p.time_start && p.time_end) {
+      const start = dayjs(p.time_start, 'HH:mm')
+      const end = dayjs(p.time_end, 'HH:mm')
+      const diff = end.diff(start, 'minute')
+      if (diff > 0) total += diff
+    } else if (p.duration_minutes) {
+      total += Number(p.duration_minutes) || 0
+    }
+  })
+  return total
+})
+
+const formatDuration = (mins) => {
+  if (!mins || mins <= 0) return '0分'
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return h > 0 ? `${h}小时${m}分` : `${m}分`
+}
+
+const todayStudyDuration = computed(() => formatDuration(todayStudyMinutes.value))
+
+const todayTaskCount = computed(() => {
+  const today = dayjs().format('YYYY-MM-DD')
+  return tasks.value.filter(t => {
+    if (!t) return false
+    if (t.date && t.date === today) return true
+    if (t.deadline && dayjs(t.deadline).isSame(dayjs(), 'day')) return true
+    return false
+  }).length
+})
+
+const completedTaskCount = computed(() => {
+  return tasks.value.filter(t => t && (t.status === 'done' || t.completed)).length
+})
+
+// 总学习时长：尝试从 tasks 和 todayPlans 中累加可能的 duration 字段
+const totalStudyMinutes = computed(() => {
+  let total = 0
+  // todayPlans may only include today's plans; include their durations if available
+  todayPlans.value.forEach(p => {
+    if (p.duration_minutes) total += Number(p.duration_minutes) || 0
+    else if (p.time_start && p.time_end) {
+      const start = dayjs(p.time_start, 'HH:mm')
+      const end = dayjs(p.time_end, 'HH:mm')
+      const diff = end.diff(start, 'minute')
+      if (diff > 0) total += diff
+    }
+  })
+  // include durations from tasks if they have a duration field
+  tasks.value.forEach(t => {
+    if (!t) return
+    if (t.duration_minutes) total += Number(t.duration_minutes) || 0
+    else if (t.estimated_minutes) total += Number(t.estimated_minutes) || 0
+  })
+  return total
+})
+
+const totalStudyDuration = computed(() => formatDuration(totalStudyMinutes.value))
 
 const getPriorityType = (priority) => {
   const types = { 1: 'danger', 2: 'warning', 3: 'info' }
@@ -495,10 +604,10 @@ onMounted(async () => {
 <style scoped>
 /* 固定宽度布局，参考首页Dashboard */
 .study-center {
-  width: 1200px;
+  width: 1100px; /* match Dashboard */
   margin: 0 auto;
   padding: 20px 0;
-  height: 150vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -522,10 +631,9 @@ onMounted(async () => {
   display: flex;
   gap: 10px;
 }
-
 .main-content {
   display: grid;
-  grid-template-columns: 780px 400px;
+  grid-template-columns: 1fr 380px; /* left / right: make right wider */
   gap: 20px;
   flex: 1;
   min-height: 0;
@@ -537,7 +645,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 20px;
   min-height: 0;
-  width: 780px;
+  width: auto; /* allow left column to be flexible */
 }
 
 .right-panel {
@@ -545,7 +653,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 20px;
   min-height: 0;
-  width: 400px;
+  width: 380px; /* make AI 聊天室区域更宽 */
 }
 
 .section {
@@ -559,13 +667,23 @@ onMounted(async () => {
   min-height: 0;
 }
 
+/* 主题色卡片变体，参考 Dashboard 配色 */
+.card-tone--peach {
+  background: #F7EDE1;
+  border: 1px solid rgba(166,90,0,0.08);
+}
+.card-tone--purple {
+  background: #E0E1F5;
+  border: 1px solid rgba(47,47,122,0.08);
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e5e5e5;
+  background: transparent;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
   flex-shrink: 0;
 }
 
@@ -597,11 +715,98 @@ onMounted(async () => {
   max-height: 380px;
 }
 
+/* 同步空状态按钮风格 */
+.empty-plan :deep(.el-button),
+.empty-task :deep(.el-button) {
+  border-radius: 6px;
+  padding: 6px 10px;
+  border: none !important;
+}
+
+/* 添加计划按钮（在今日学习计划卡片内） */
+.card-tone--purple .plan-stats :deep(.el-button),
+.card-tone--purple .section-header :deep(.el-button) {
+  background: #D6D9F6 !important;
+  color: #2F2F7A !important;
+}
+
+/* 今日学习计划顶部“添加计划”按钮使用橙色风格 */
+.today-plan .plan-stats :deep(.el-button) {
+  background: #F8E2C9 !important;
+  color: #A65A00 !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.today-plan .plan-stats :deep(.el-button):hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* 新建任务按钮（页头） */
+.quick-actions :deep(.el-button[type="primary"]).el-button {
+  background: #F8E2C9 !important;
+  color: #A65A00 !important;
+  border: none !important;
+}
+
+/* 任务管理内的新建任务按钮（紫色） */
+.task-management .task-header-actions :deep(.el-button) {
+  background: #D6D9F6 !important;
+  color: #2F2F7A !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+/* 任务管理空状态“创建第一个任务”按钮（紫色） */
+.task-management .empty-task :deep(.el-button) {
+  background: #D6D9F6 !important;
+  color: #2F2F7A !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.task-management .empty-task :deep(.el-button):hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* 计划与任务列表项背景微调，贴近 Dashboard 的卡片感 */
+.plan-item,
+.task-item {
+  background: var(--page-bg, #f8f9fa);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* AI 聊天气泡配色微调（使用全局绿色配色） */
+.message-item.ai .message-text {
+  background: var(--soft-green, rgba(44,199,183,0.08));
+  color: var(--nav-active);
+}
+.message-item.user .message-text {
+  background: var(--primary);
+  color: #fff;
+}
+
 .empty-plan {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 150px;
+}
+
+/* 空状态内“添加第一个计划”按钮，与顶部添加计划保持一致的橙色 */
+.today-plan .empty-plan :deep(.el-button) {
+  background: #F8E2C9 !important;
+  color: #A65A00 !important;
+  border: none !important;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.today-plan .empty-plan :deep(.el-button):hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
 }
 
 .plan-list {
@@ -659,6 +864,7 @@ onMounted(async () => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -687,6 +893,7 @@ onMounted(async () => {
   flex: 1;
   min-height: 530px;
   max-height: 530px;
+  grid-column: 1 / -1; /* span full width of main-content */
 }
 
 .task-header-actions {
@@ -793,6 +1000,7 @@ onMounted(async () => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -831,6 +1039,12 @@ onMounted(async () => {
   flex: 1;
   min-height: 350px;
   max-height: 500px;
+}
+
+/* 覆盖 AI 聊天室卡片为指定的浅绿背景 */
+.section.ai-chatroom {
+  background: #EFF7E0 !important;
+  border-color: rgba(44,199,183,0.12) !important;
 }
 
 .chatroom-content {
@@ -970,5 +1184,140 @@ onMounted(async () => {
 .task-content::-webkit-scrollbar-thumb:hover,
 .message-list::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Chart row spans full grid width under task-management */
+.chart-row {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+}
+
+.chart-row .study-chart {
+  width: 100%;
+}
+
+/* 学习总览卡片布局 */
+.learning-overview {
+  grid-column: 1 / -1;
+  padding: 0;
+  margin-top: 20px; /* space from the card above */
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+.overview-grid {
+  align-items: stretch; /* make left/right columns match heights */
+}
+.overview-left { display: flex; flex-direction: column; }
+.overview-left .chart-wrapper {
+  padding: 16px;
+  min-height: 240px;
+  flex: 1; /* allow left body to define height */
+}
+.overview-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* evenly distribute cards vertically */
+  gap: 16px;
+  height: 100%; /* fill the full height of the grid row */
+  padding: 20px; /* increased outer spacing inside the learning-overview */
+  box-sizing: border-box;
+}
+.stat-card {
+  /* base card */
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px; /* larger inner padding */
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 8px 20px rgba(43,50,80,0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  width: 100%;
+}
+
+/* 卡片纯色主题变量（局部覆盖，使用全局变量作为回退） */
+.overview-right {
+  --card-teal: var(--primary);
+  --card-green: var(--soft-green-600, #cdeccd);
+  --card-blue: #e8f2ff;
+  --card-purple: var(--soft-purple-600, #c9bff6);
+}
+.stat-title {
+  font-size: 13px;
+  color: var(--muted, #666);
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--nav-active, #2b3250);
+}
+
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 18px;
+  background: rgba(0,0,0,0.03);
+}
+
+/* use global variables for colors */
+.stat-card--teal {
+  /* 改为浅橙色背景，使用全局浅桃变量为回退 */
+  background: var(--soft-peach, #FFF2E6);
+  color: var(--accent, #fb8c4a);
+}
+.stat-card--teal .stat-icon { background: rgba(255,255,255,0.7); color: var(--accent, #fb8c4a) }
+
+.stat-card--green {
+  background: var(--card-green);
+  color: var(--nav-active);
+}
+.stat-card--green .stat-icon { background: rgba(255,255,255,0.35); color: var(--nav-active) }
+
+.stat-card--blue {
+  background: var(--card-blue);
+  color: var(--nav-active);
+}
+.stat-card--blue .stat-icon { background: rgba(255,255,255,0.6); color: var(--nav-active) }
+
+.stat-card--purple {
+  /* 浅紫色主题，使用全局回退变量 */
+  background: var(--soft-purple, #EDE8FF);
+  color: var(--nav-active, #2b3250);
+}
+.stat-card--purple .stat-icon { background: rgba(255,255,255,0.7); color: var(--nav-active, #2b3250); }
+
+/* make stacked cards look better on narrow screens */
+@media (max-width: 900px) {
+  .overview-right { gap: 18px; padding: 12px }
+  .stat-card { min-height: 110px; padding: 12px }
+}
+
+@media (max-width: 900px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .overview-right {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .stat-card { flex: 1 }
 }
 </style>

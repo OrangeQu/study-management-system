@@ -67,15 +67,15 @@
           <p class="decoration-desc">登录系统以管理学生信息、成绩和课程安排</p>
           <div class="decoration-features">
             <div class="feature-item">
-              <el-icon size="20" color="#52c41a"><CircleCheckFilled /></el-icon>
+              <el-icon size="20" color="var(--soft-green-600)"><CircleCheckFilled /></el-icon>
               <span>学生信息管理</span>
             </div>
             <div class="feature-item">
-              <el-icon size="20" color="#52c41a"><CircleCheckFilled /></el-icon>
+              <el-icon size="20" color="var(--soft-green-600)"><CircleCheckFilled /></el-icon>
               <span>成绩统计分析</span>
             </div>
             <div class="feature-item">
-              <el-icon size="20" color="#52c41a"><CircleCheckFilled /></el-icon>
+              <el-icon size="20" color="var(--soft-green-600)"><CircleCheckFilled /></el-icon>
               <span>课程安排管理</span>
             </div>
           </div>
@@ -85,7 +85,7 @@
     
     <div class="wave-container">
       <svg class="wave" viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path fill="#1890ff" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,128C960,117,1056,139,1152,149.3C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        <path fill="var(--primary)" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,128C960,117,1056,139,1152,149.3C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
       </svg>
     </div>
   </div>
@@ -152,7 +152,7 @@ const goToRegister = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+  background: var(--page-bg);
   padding: 20px;
   position: relative;
   overflow: hidden;
@@ -162,10 +162,10 @@ const goToRegister = () => {
   display: flex;
   max-width: 900px;
   width: 100%;
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(24, 144, 255, 0.1);
+  box-shadow: var(--soft-shadow);
   position: relative;
   z-index: 2;
 }
@@ -186,16 +186,16 @@ const goToRegister = () => {
 .auth-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1890ff;
+  color: var(--primary);
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #7f8c8d;
+  color: var(--muted);
 }
 
 .auth-form {
@@ -215,13 +215,13 @@ const goToRegister = () => {
 
 .auth-input :deep(.el-input__wrapper:hover),
 .auth-input :deep(.el-input__wrapper.is-focus) {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(44,199,183,0.08);
 }
 
 .auth-input :deep(.el-input__prefix) {
   margin-right: 10px;
-  color: #1890ff;
+  color: var(--primary);
 }
 
 .auth-button {
@@ -230,10 +230,10 @@ const goToRegister = () => {
   height: 48px;
   font-size: 16px;
   margin-top: 10px;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   border: none;
   transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(44,199,183,0.3);
 }
 
 .auth-button:hover {
@@ -264,7 +264,7 @@ const goToRegister = () => {
 
 .auth-decoration {
   flex: 0.8;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   color: white;
   padding: 60px 50px;
   display: flex;

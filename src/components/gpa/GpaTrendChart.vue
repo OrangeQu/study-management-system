@@ -169,7 +169,8 @@ const updateChart = () => {
       splitLine: {
         lineStyle: {
           type: 'dashed',
-          color: '#f0f0f0'
+          // 背景虚线颜色（已调整为更柔和的灰色）
+          color: '#FCF2EA'
         }
       }
     },
@@ -199,7 +200,8 @@ const updateChart = () => {
         markLine: {
           silent: true,
           lineStyle: {
-            color: '#52c41a',
+            // 平均线颜色（使用项目 accent 色调）
+            color: '#fb8c4a',
             width: 2,
             type: 'dashed'
           },

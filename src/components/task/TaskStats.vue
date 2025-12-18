@@ -218,23 +218,23 @@ const getTypeColor = (type) => {
 }
 
 .stat-card.total {
-  background: #f0f9ff;
-  border-color: #409eff;
+  background: var(--soft-purple);
+  border-color: var(--soft-purple-600);
 }
 
 .stat-card.doing {
-  background: #fff7e6;
-  border-color: #e6a23c;
+  background: var(--soft-peach);
+  border-color: var(--soft-peach-600);
 }
 
 .stat-card.done {
-  background: #f6ffed;
-  border-color: #67c23a;
+  background: var(--soft-green);
+  border-color: var(--soft-green-600);
 }
 
 .stat-card.urgent {
-  background: #fff2f0;
-  border-color: #f56c6c;
+  background: rgba(251,140,74,0.08);
+  border-color: var(--accent);
 }
 
 .stat-icon {
@@ -243,19 +243,19 @@ const getTypeColor = (type) => {
 }
 
 .stat-icon.total .el-icon {
-  color: #409eff;
+  color: var(--soft-purple-600);
 }
 
 .stat-icon.doing .el-icon {
-  color: #e6a23c;
+  color: var(--soft-peach-600);
 }
 
 .stat-icon.done .el-icon {
-  color: #67c23a;
+  color: var(--soft-green-600);
 }
 
 .stat-icon.urgent .el-icon {
-  color: #f56c6c;
+  color: var(--accent);
 }
 
 .stat-content {

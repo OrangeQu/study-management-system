@@ -50,7 +50,7 @@ export const useMainStore = defineStore('main', {
     setPreferences(prefs = {}) {
       const studySettings = {
         ...this.studySettings,
-        ...(prefs.studySettings || {})
+        ...(prefs.studySettings)
       }
       this.preferences = {
         ...this.preferences,

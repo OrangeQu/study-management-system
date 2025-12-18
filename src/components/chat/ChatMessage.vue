@@ -70,14 +70,14 @@ const formatTime = (time) => {
 }
 
 .chat-message.ai .message-text {
-  background: #f0f2f5;
-  color: #333;
+  background: #EFF7E0; /* match AI chat card */
+  color: #0B6B3A; /* dark green for contrast */
   border-top-left-radius: 0;
 }
 
 .chat-message.user .message-text {
-  background: #409eff;
-  color: white;
+  background: var(--primary); /* use global primary for user */
+  color: #ffffff;
   border-top-right-radius: 0;
 }
 

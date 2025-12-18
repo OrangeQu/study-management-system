@@ -5,6 +5,7 @@
     :width="dialogWidth"
     :close-on-click-modal="false"
     @close="handleClose"
+    custom-class="card-tone card-tone--peach"
   >
     <el-form
       ref="formRef"

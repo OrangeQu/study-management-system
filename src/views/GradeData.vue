@@ -37,49 +37,50 @@
         <h3>GPA 总览</h3>
       </div>
       <div class="gpa-stats-grid">
-        <GpaStats
-          title="本学期 GPA"
-          :value="currentSemesterGPA"
-          label="当前学期"
-          icon="Trophy"
-          :icon-color="getGpaColor(currentSemesterGPA)"
-          :tag="currentSemester"
-        />
+        <div class="gpa-card card-tone card-tone--purple gpa-highlight">
+          <div class="gpa-highlight-inner">
+            <div class="gpa-header">
+              <el-icon class="gpa-icon"><Trophy /></el-icon>
+              <div class="gpa-title">本学期 GPA</div>
+            </div>
 
-        <GpaStats
-          title="累计 GPA"
-          :value="totalGPA"
-          label="全部学期"
-          icon="Star"
-          :icon-color="getGpaColor(totalGPA)"
-          :sub-info="`课程数：${totalCourses}`"
-        />
+            <div class="gpa-value">{{ currentSemesterGPA.toFixed(2) }}</div>
+            <div class="gpa-sub">当前学期</div>
+          </div>
+        </div>
 
-        <GpaStats
-          title="学分完成情况"
-          :value="passedCredits"
-          label="已修学分"
-          icon="Checked"
-          icon-color="#52c41a"
-          :show-progress="true"
-          :percentage="creditProgress"
-          :progress-current="passedCredits"
-          :progress-total="totalCredits"
-          :progress-color="getProgressColor(creditProgress)"
-        />
+        <div class="gpa-card card-tone card-tone--peach gpa-highlight">
+          <div class="gpa-highlight-inner">
+            <div class="gpa-header">
+              <el-icon class="gpa-icon"><Star /></el-icon>
+              <div class="gpa-title">累计 GPA</div>
+            </div>
+            <div class="gpa-value">{{ totalGPA.toFixed(2) }}</div>
+            <div class="gpa-sub">全部学期 · 课程数：{{ totalCourses }}</div>
+          </div>
+        </div>
 
-        <GpaStats
-          title="通过率"
-          :value="passRate"
-          label="已通过"
-          icon="SuccessFilled"
-          icon-color="#1890ff"
-          :show-progress="true"
-          :percentage="passRate"
-          :progress-current="passedCourses"
-          :progress-total="totalCourses"
-          :progress-color="getPassRateColor(passRate)"
-        />
+        <div class="gpa-card card-tone card-tone--green gpa-highlight">
+          <div class="gpa-highlight-inner">
+            <div class="gpa-header">
+              <el-icon class="gpa-icon"><Checked /></el-icon>
+              <div class="gpa-title">学分完成情况</div>
+            </div>
+            <div class="gpa-value">{{ passedCredits }}</div>
+            <div class="gpa-sub">已修学分 · 共 {{ totalCredits }}</div>
+          </div>
+        </div>
+
+        <div class="gpa-card card-tone card-tone--peach gpa-highlight">
+          <div class="gpa-highlight-inner">
+            <div class="gpa-header">
+              <el-icon class="gpa-icon"><SuccessFilled /></el-icon>
+              <div class="gpa-title">通过率</div>
+            </div>
+            <div class="gpa-value">{{ passRate }}%</div>
+            <div class="gpa-sub">已通过 · 共 {{ passedCourses }} / {{ totalCourses }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -91,12 +92,14 @@
         </div>
       </div>
 
-      <GpaTrendChart
-        :title="'学期 GPA 趋势'"
-        :gpa-data="gpaTrendData"
-        :height="'300px'"
-        @semester-click="handleSemesterClick"
-      />
+      <div class="trend-card card-tone card-tone--green">
+        <GpaTrendChart
+          :title="'学期 GPA 趋势'"
+          :gpa-data="gpaTrendData"
+          :height="'300px'"
+          @semester-click="handleSemesterClick"
+        />
+      </div>
     </div>
 
     <div class="data-section">
@@ -121,7 +124,7 @@
         @filter-change="handleFilterChange"
       />
 
-      <div class="table-container">
+      <div class="table-container card-tone card-tone--peach">
         <GradeTable
           ref="gradeTable"
           :grades="filteredGrades"
@@ -296,6 +299,7 @@
       v-model="showBatchImport"
       title="批量导入"
       width="600px"
+      custom-class="card-tone card-tone--purple"
     >
       <div class="import-guide">
         <p>请准备包含以下列的 Excel/CSV 文件：</p>
@@ -354,11 +358,14 @@ import {
   Document,
   DataAnalysis,
   TrendCharts,
-  List
+  List,
+  Trophy,
+  Star,
+  Checked,
+  SuccessFilled
 } from '@element-plus/icons-vue'
 import { listGrades, createGrade, updateGrade, deleteGrade, statsGrades } from '@/api/grades'
 
-import GpaStats from '@/components/gpa/GpaStats.vue'
 import GpaTrendChart from '@/components/gpa/GpaTrendChart.vue'
 import GradeTable from '@/components/gpa/GradeTable.vue'
 import GradeFilter from '@/components/gpa/GradeFilter.vue'
@@ -566,11 +573,6 @@ const passRate = computed(() => {
   return Math.round((passedCourses.value / totalCourses.value) * 100)
 })
 
-const creditProgress = computed(() => {
-  if (totalCredits.value === 0) return 0
-  return Math.round((passedCredits.value / totalCredits.value) * 100)
-})
-
 const gpaTrendData = computed(() => {
   if (stats.value.trend && stats.value.trend.length) {
     return [...stats.value.trend].sort((a, b) => a.semester.localeCompare(b.semester))
@@ -614,26 +616,7 @@ const handleScoreChange = (score) => {
   gradeForm.value.grade_point = calculateGradePoint(score ?? gradeForm.value.score)
 }
 
-const getGpaColor = (gpa) => {
-  if (gpa >= 4) return '#52c41a'
-  if (gpa >= 3) return '#1890ff'
-  if (gpa >= 2) return '#faad14'
-  return '#f5222d'
-}
-
-const getProgressColor = (percentage) => {
-  if (percentage >= 90) return '#52c41a'
-  if (percentage >= 70) return '#1890ff'
-  if (percentage >= 50) return '#faad14'
-  return '#f5222d'
-}
-
-const getPassRateColor = (rate) => {
-  if (rate >= 95) return '#52c41a'
-  if (rate >= 85) return '#1890ff'
-  if (rate >= 70) return '#faad14'
-  return '#f5222d'
-}
+// color helpers removed (not used after card simplification)
 
 const showAddDialog = () => {
   dialogMode.value = 'create'
@@ -847,7 +830,7 @@ onMounted(async () => {
 
 <style scoped>
 .grade-data-page {
-  width: 1200px;
+  width: 1100px;
   margin: 0 auto;
   padding: 20px 0;
   min-height: 100vh;
@@ -1028,5 +1011,56 @@ onMounted(async () => {
   display: flex;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* GPA highlight card (附件样式) */
+.gpa-highlight {
+  padding: 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gpa-highlight-inner {
+  width: 100%;
+  max-width: 420px;
+  background: transparent;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: none;
+  border: none;
+}
+
+.gpa-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 4px;
+  border-bottom: none;
+}
+
+.gpa-icon {
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.gpa-title {
+  font-size: 18px;
+  color: #666;
+  font-weight: 600;
+}
+
+.gpa-value {
+  margin-top: 18px;
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.gpa-sub {
+  margin-top: 8px;
+  color: #9aa0a6;
 }
 </style>

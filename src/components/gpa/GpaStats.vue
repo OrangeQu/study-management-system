@@ -11,38 +11,38 @@
         <el-tag v-if="tag" :type="tagType" size="small">{{ tag }}</el-tag>
       </div>
     </template>
-    
+
     <div class="card-content">
-      <div class="main-value" :style="{ color: valueColor }">
+      <div class="main-value" :style="{ color: 'var(--primary)' }">
         {{ displayValue }}
       </div>
-      <div class="value-label">{{ label }}</div>
-      
+      <div class="value-label" :style="{ color: 'var(--muted)' }">{{ label }}</div>
+
       <!-- 进度条（如果有） -->
       <div v-if="showProgress" class="progress-container">
         <el-progress 
           :percentage="percentage" 
-          :color="progressColor"
+          :color="'var(--accent)'"
           :stroke-width="6"
           :show-text="false"
         />
         <div class="progress-info">
-          <span class="current">{{ progressCurrent }}</span>
-          <span class="total">/ {{ progressTotal }}</span>
+          <span class="current" :style="{ color: 'var(--primary)' }">{{ progressCurrent }}</span>
+          <span class="total" :style="{ color: 'var(--muted)' }">/ {{ progressTotal }}</span>
         </div>
       </div>
-      
+
       <!-- 子信息 -->
-      <div v-if="subInfo" class="sub-info">
+      <div v-if="subInfo" class="sub-info" :style="{ color: 'var(--muted)' }">
         {{ subInfo }}
       </div>
-      
+
       <!-- 趋势指示器 -->
       <div v-if="showTrend" class="trend-indicator">
         <el-icon :color="trendColor" :size="16">
           <component :is="trendIcon" />
         </el-icon>
-        <span class="trend-value">{{ trendValue }}</span>
+        <span class="trend-value" :style="{ color: 'var(--muted)' }">{{ trendValue }}</span>
       </div>
     </div>
   </el-card>
@@ -66,7 +66,7 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  
+
   // 图标
   icon: {
     type: String,
@@ -74,9 +74,9 @@ const props = defineProps({
   },
   iconColor: {
     type: String,
-    default: '#1890ff'
+    default: 'var(--primary)'
   },
-  
+
   // 标签
   tag: {
     type: String,
@@ -86,7 +86,7 @@ const props = defineProps({
     type: String,
     default: 'info'
   },
-  
+
   // 进度条
   showProgress: {
     type: Boolean,
@@ -98,7 +98,7 @@ const props = defineProps({
   },
   progressColor: {
     type: String,
-    default: '#1890ff'
+    default: 'var(--accent)'
   },
   progressCurrent: {
     type: [Number, String],
@@ -108,13 +108,13 @@ const props = defineProps({
     type: [Number, String],
     default: ''
   },
-  
+
   // 子信息
   subInfo: {
     type: String,
     default: ''
   },
-  
+
   // 趋势
   showTrend: {
     type: Boolean,
@@ -138,17 +138,6 @@ const displayValue = computed(() => {
   return props.value
 })
 
-const valueColor = computed(() => {
-  if (props.title.includes('GPA')) {
-    const value = parseFloat(props.value)
-    if (value >= 3.5) return '#52c41a'
-    if (value >= 3.0) return '#1890ff'
-    if (value >= 2.5) return '#faad14'
-    return '#f5222d'
-  }
-  return '#1890ff'
-})
-
 const trendIcon = computed(() => {
   switch (props.trendDirection) {
     case 'up': return 'Top'
@@ -159,9 +148,9 @@ const trendIcon = computed(() => {
 
 const trendColor = computed(() => {
   switch (props.trendDirection) {
-    case 'up': return '#52c41a'
-    case 'down': return '#f5222d'
-    default: return '#999'
+    case 'up': return 'var(--soft-green)'
+    case 'down': return 'var(--soft-red)'
+    default: return 'var(--muted)'
   }
 })
 </script>
@@ -174,7 +163,7 @@ const trendColor = computed(() => {
 
 .gpa-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--soft-shadow);
 }
 
 .card-header {
@@ -194,7 +183,7 @@ const trendColor = computed(() => {
 .card-title {
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: var(--muted);
 }
 
 .card-content {
@@ -214,7 +203,7 @@ const trendColor = computed(() => {
 
 .value-label {
   font-size: 14px;
-  color: #999;
+  color: var(--muted);
   margin-bottom: 12px;
 }
 
@@ -228,17 +217,17 @@ const trendColor = computed(() => {
   align-items: center;
   margin-top: 4px;
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 
 .progress-info .current {
   font-weight: 600;
-  color: #1890ff;
+  color: var(--primary);
 }
 
 .sub-info {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
   margin-top: 8px;
 }
 
@@ -251,6 +240,6 @@ const trendColor = computed(() => {
 }
 
 .trend-value {
-  color: #666;
+  color: var(--muted);
 }
 </style>
