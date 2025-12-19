@@ -13,11 +13,11 @@
       <el-form-item label="角色" prop="role">
         <el-select v-model="form.role" placeholder="选择角色">
           <el-option label="管理员" value="admin" />
-          <el-option label="用户" value="user" />
+          <el-option label="普通用户" value="user" />
         </el-select>
       </el-form-item>
       <el-form-item label="密码" prop="password">
-        <el-input v-model="form.password" type="password" placeholder="不填保持不变" />
+        <el-input v-model="form.password" type="password" />
       </el-form-item>
     </el-form>
 

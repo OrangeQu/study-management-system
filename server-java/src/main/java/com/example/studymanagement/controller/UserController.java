@@ -97,6 +97,7 @@ public class UserController {
         info.put("gender", user.getGender());
         info.put("phone", user.getPhone());
         info.put("avatar", user.getAvatar());
+        info.put("role", user.getRole() != null ? user.getRole().toLowerCase() : "user");
         return info;
     }
 

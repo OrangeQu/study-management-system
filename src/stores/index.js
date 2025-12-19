@@ -25,7 +25,10 @@ export const useMainStore = defineStore('main', {
     userInfo: {
       id: null,
       username: '',
-      avatar: ''
+      avatar: '',
+      nickname: '',
+      email: '',
+      role: 'user'
     },
     theme: buildDefaultPreferences().theme,
     preferences: buildDefaultPreferences(),

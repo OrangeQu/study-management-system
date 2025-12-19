@@ -53,6 +53,7 @@ public class AuthController {
         userInfo.put("email", user.getEmail());
         userInfo.put("nickname", user.getNickname());
         userInfo.put("avatar", user.getAvatar());
+        userInfo.put("role", user.getRole() != null ? user.getRole().toLowerCase() : "user");
         resp.setUser(userInfo);
         Map<String, Object> body = new HashMap<>();
         body.put("code", 0);
@@ -76,6 +77,7 @@ public class AuthController {
         userInfo.put("email", user.getEmail());
         userInfo.put("nickname", user.getNickname());
         userInfo.put("avatar", user.getAvatar());
+        userInfo.put("role", user.getRole() != null ? user.getRole().toLowerCase() : "user");
         resp.setUser(userInfo);
         loginDeviceService.recordLogin(user, servletRequest);
         Map<String, Object> body = new HashMap<>();

@@ -1,5 +1,6 @@
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\config\DeepseekProperties.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\config\SecurityConfig.java
+E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\AdminController.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\AuthController.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\ChatController.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\DataController.java
@@ -9,9 +10,11 @@ E:\web\12.17\study-management-system\server-java\src\main\java\com\example\study
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\StudyController.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\TaskController.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\controller\UserController.java
+E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\dto\AdminUserRequest.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\dto\AuthResponse.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\dto\LoginRequest.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\dto\RegisterRequest.java
+E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\dto\ResetPasswordRequest.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\model\Grade.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\model\LoginDevice.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\model\Plan.java
@@ -27,6 +30,7 @@ E:\web\12.17\study-management-system\server-java\src\main\java\com\example\study
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\repository\UserRepository.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\repository\UserSettingsRepository.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\security\JwtAuthFilter.java
+E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\service\AdminUserInitializer.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\service\CustomUserDetailsService.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\service\DeepseekService.java
 E:\web\12.17\study-management-system\server-java\src\main\java\com\example\studymanagement\service\JwtService.java

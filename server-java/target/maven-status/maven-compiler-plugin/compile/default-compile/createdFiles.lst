@@ -4,11 +4,11 @@ com\example\studymanagement\model\Task.class
 com\example\studymanagement\controller\PlanController.class
 com\example\studymanagement\model\LoginDevice.class
 com\example\studymanagement\model\User.class
-com\example\studymanagement\controller\UserController$PasswordRequest.class
 com\example\studymanagement\repository\StudySessionRepository.class
 com\example\studymanagement\service\JwtService.class
 com\example\studymanagement\controller\StudyController.class
 com\example\studymanagement\repository\GradeRepository.class
+com\example\studymanagement\controller\StudyController$1.class
 com\example\studymanagement\dto\LoginRequest.class
 com\example\studymanagement\repository\PlanRepository.class
 com\example\studymanagement\model\StudySession.class

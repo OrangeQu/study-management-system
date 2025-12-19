@@ -57,7 +57,7 @@
               <el-icon><Setting /></el-icon>
               <span>设置</span>
             </router-link>
-            <router-link to="/admin/users" class="nav-item">
+            <router-link v-if="isAdmin" to="/admin/users" class="nav-item">
               <el-icon><List /></el-icon>
               <span>管理端</span>
             </router-link>
@@ -115,6 +115,8 @@ const store = useMainStore()
 
 const username = computed(() => store.userInfo.username || '同学')
 const userAvatar = computed(() => store.userInfo.avatar || '')
+const userRole = computed(() => store.userInfo.role || 'user')
+const isAdmin = computed(() => userRole.value.toLowerCase() === 'admin')
 
 const todayStudyTime = ref(0)
 

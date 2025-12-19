@@ -33,7 +33,8 @@ const routes = [
       {
         path: 'admin/users',
         name: 'AdminUsers',
-        component: () => import('../views/admin/UsersList.vue')
+        component: () => import('../views/admin/UsersList.vue'),
+        meta: { requiresAdmin: true }
       }
     ]
   },
@@ -55,6 +56,7 @@ const router = createRouter({
 })
 
 const authWhitelist = ['Login', 'Register']
+const isAdminRole = (role) => (role || '').toString().toLowerCase() === 'admin'
 
 router.beforeEach(async (to, from, next) => {
   const store = useMainStore()
@@ -80,6 +82,10 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (token && authWhitelist.includes(to.name)) {
+    return next('/dashboard')
+  }
+
+  if (to.meta?.requiresAdmin && !isAdminRole(store.userInfo.role)) {
     return next('/dashboard')
   }
 
