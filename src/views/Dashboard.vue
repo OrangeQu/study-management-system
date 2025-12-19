@@ -677,6 +677,9 @@ onMounted(async () => {
     color-mix(in srgb, var(--primary) 55%, #ffffff)
   );
   color: #fff;
+  border-radius: 12px;
+  box-shadow: var(--soft-shadow, 0 10px 30px rgba(43,50,80,0.08));
+  overflow: hidden;
 }
 
 .welcome-left {
@@ -918,14 +921,14 @@ onMounted(async () => {
   align-items: center;
   padding: 12px;
   border-radius: 6px;
-  background: var(--page-bg);
+  background: #D7D9F3;
   border-left: 3px solid rgba(0,0,0,0.04);
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .plan-item:hover {
-  background: var(--page-bg);
+  background: #D7D9F3;
   transform: translateX(2px);
 }
 
@@ -1038,14 +1041,14 @@ onMounted(async () => {
   align-items: center;
   padding: 12px;
   border-radius: 6px;
-  background: var(--page-bg);
+  background: #F4E3CC;
   border: 1px solid rgba(0,0,0,0.04);
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .todo-item:hover {
-  background: var(--page-bg);
+  background: #F4E3CC;
   transform: translateX(2px);
 }
 
@@ -1056,7 +1059,7 @@ onMounted(async () => {
 
 .todo-item.completed {
   opacity: 0.7;
-  background: var(--page-bg);
+  background: #F4E3CC;
 }
 
 .todo-item.completed .todo-title {
@@ -1151,6 +1154,7 @@ onMounted(async () => {
   /* 使用单一主色作为卡片底色，顶部使用用户指定颜色 */
   background: linear-gradient(180deg, var(--fam-bg-start), var(--fam-bg-end));
   border: 1px solid rgba(0,0,0,0.04);
+  overflow-x: hidden; /* 禁止水平滚动/位移，允许垂直滚动 */
 }
 
 /* 将全家色系应用到卡片内元素 */
@@ -1161,9 +1165,14 @@ onMounted(async () => {
   background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0.98));
   border-left: 4px solid var(--fam-primary);
 }
+.upcoming-deadlines .deadline-item {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .upcoming-deadlines .deadline-item:hover {
-  transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(0,168,89,0.08);
+  transform: translateY(-4px); /* 仅做垂直位移，避免左右移动 */
+  box-shadow: 0 6px 18px rgba(0,168,89,0.08);
 }
 .upcoming-deadlines .deadline-time {
   color: var(--fam-accent);

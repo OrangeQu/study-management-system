@@ -76,7 +76,8 @@ const formatTime = (time) => {
 }
 
 .chat-message.user .message-text {
-  background: var(--primary); /* use global primary for user */
+  /* 使用主题色作为用户消息背景，兼容 Element Plus 主题变量作为回退 */
+  background: var(--primary, var(--el-color-primary));
   color: #ffffff;
   border-top-right-radius: 0;
 }

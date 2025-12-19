@@ -573,7 +573,7 @@ const THEME_PRESETS = {
   blue: {
     primary: '#2cc7b7',
     accent: '#fb8c4a',
-    pageBg: '#f6f7f9',
+    pageBg: '#ffffff',
     navBg: '#f4f6f7',
     navActive: '#2b3250',
     cardBg: '#ffffff'
@@ -581,7 +581,7 @@ const THEME_PRESETS = {
   green: {
     primary: '#36c187',
     accent: '#ffb74d',
-    pageBg: '#f3f9f4',
+    pageBg: '#ffffff',
     navBg: '#e6f4ec',
     navActive: '#1f3c2e',
     cardBg: '#ffffff'
@@ -589,7 +589,7 @@ const THEME_PRESETS = {
   purple: {
     primary: '#7f6dff',
     accent: '#ff9acb',
-    pageBg: '#f8f6ff',
+    pageBg: '#ffffff',
     navBg: '#efe9ff',
     navActive: '#3c2f6b',
     cardBg: '#ffffff'
@@ -597,7 +597,7 @@ const THEME_PRESETS = {
   orange: {
     primary: '#ff8d4e',
     accent: '#ffd166',
-    pageBg: '#fff7f0',
+    pageBg: '#ffffff',
     navBg: '#ffeede',
     navActive: '#5c3a1c',
     cardBg: '#ffffff'

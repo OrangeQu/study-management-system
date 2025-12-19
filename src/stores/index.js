@@ -61,6 +61,11 @@ export const useMainStore = defineStore('main', {
       if (prefs.theme) {
         this.theme = prefs.theme
       }
+      try {
+        localStorage.setItem('preferences', JSON.stringify(this.preferences))
+      } catch (e) {
+        // ignore storage errors
+      }
     },
     addTask(task) {
       this.tasks.push(task)

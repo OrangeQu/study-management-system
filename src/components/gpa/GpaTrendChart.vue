@@ -124,7 +124,20 @@ const initChart = () => {
 
 const updateChart = () => {
   if (!chartInstance) return
-  
+  // 尝试读取 CSS 变量中的主题色，回退到 Element Plus 变量或默认色
+  const docStyle = getComputedStyle(document.documentElement)
+  const primaryFromCss = (docStyle.getPropertyValue('--primary') || docStyle.getPropertyValue('--el-color-primary') || '').trim()
+  const primaryColor = primaryFromCss || '#2cc7b7'
+
+  const hexToRgba = (hex, alpha = 1) => {
+    const h = hex.replace('#', '')
+    const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16)
+    const r = (bigint >> 16) & 255
+    const g = (bigint >> 8) & 255
+    const b = bigint & 255
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+
   const option = {
     tooltip: {
       trigger: 'axis',
@@ -135,7 +148,7 @@ const updateChart = () => {
             <div style="font-weight: 600; margin-bottom: 4px">${data.name}</div>
             <div style="display: flex; align-items: center; gap: 8px">
               <span>GPA: </span>
-              <span style="font-weight: 700; color: #1890ff">${data.value.toFixed(2)}</span>
+              <span style="font-weight: 700; color: ${primaryColor}">${data.value.toFixed(2)}</span>
             </div>
             <div style="margin-top: 4px; font-size: 12px; color: #666">
               排名: ${data.dataIndex + 1}/${gpaValues.value.length}
@@ -184,17 +197,17 @@ const updateChart = () => {
         symbolSize: 8,
         lineStyle: {
           width: 3,
-          color: '#1890ff'
+          color: primaryColor
         },
         itemStyle: {
-          color: '#1890ff',
+          color: primaryColor,
           borderColor: '#fff',
           borderWidth: 2
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(24, 144, 255, 0.4)' },
-            { offset: 1, color: 'rgba(24, 144, 255, 0.1)' }
+            { offset: 0, color: hexToRgba(primaryColor, 0.4) },
+            { offset: 1, color: hexToRgba(primaryColor, 0.08) }
           ])
         },
         markLine: {
@@ -353,7 +366,7 @@ onUnmounted(() => {
 }
 
 .semester-label.active {
-  background: #1890ff;
+  background: var(--primary, var(--el-color-primary));
   color: white;
 }
 </style>

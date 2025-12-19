@@ -352,7 +352,7 @@ onUnmounted(() => {
   background: var(--soft-green);
   border: 1px solid var(--soft-green-600);
   border-radius: 6px;
-  color: var(--soft-green-600);
+  color: #635a5a; /* 改为黑色文字 */
   font-weight: 500;
 }
 

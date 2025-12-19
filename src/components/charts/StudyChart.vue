@@ -449,7 +449,7 @@ watch(activeChart, () => {
 }
 
 .chart-container {
-  height: 300px;
+  height: 360px;
   margin-bottom: 24px;
 }
 

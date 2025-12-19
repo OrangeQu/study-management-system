@@ -18,7 +18,7 @@ body {
 }
 
 :root{
-  --page-bg: #f6f7f9;
+  --page-bg: #ffffff;
   --nav-bg: #f4f6f7;
   --nav-active: #2b3250;
   --primary: #2cc7b7;
