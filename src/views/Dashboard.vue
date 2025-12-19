@@ -918,6 +918,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 220px;
 }
 
@@ -937,11 +938,13 @@ onUnmounted(() => {
   border-left: 3px solid rgba(0,0,0,0.04);
   transition: all 0.2s;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .plan-item:hover {
   background: #D7D9F3;
-  transform: translateX(2px);
+  transform: translateY(-1px);
 }
 
 .plan-item.active {
@@ -1043,6 +1046,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 240px;
 }
 
@@ -1062,11 +1066,13 @@ onUnmounted(() => {
   border: 1px solid rgba(0,0,0,0.04);
   transition: all 0.2s;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .todo-item:hover {
   background: #F4E3CC;
-  transform: translateX(2px);
+  transform: translateY(-1px);
 }
 
 .todo-item.high-priority {

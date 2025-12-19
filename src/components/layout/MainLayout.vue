@@ -172,7 +172,7 @@ onMounted(() => {
   box-shadow: var(--soft-shadow);
   z-index: 1000;
   backdrop-filter: blur(6px);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .side-container {
