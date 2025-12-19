@@ -57,6 +57,10 @@
               <el-icon><Setting /></el-icon>
               <span>设置</span>
             </router-link>
+            <router-link to="/admin/users" class="nav-item">
+              <el-icon><List /></el-icon>
+              <span>管理端</span>
+            </router-link>
           </nav>
           
           <!-- 日历移动到侧边栏最后 -->
