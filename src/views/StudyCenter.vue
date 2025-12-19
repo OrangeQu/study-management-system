@@ -249,7 +249,7 @@
             <div class="stat-card stat-card--blue">
               <div class="stat-top">
                 <div class="stat-icon">📝</div>
-                <div class="stat-title">今日任务数量</div>
+                <div class="stat-title">任务数量</div>
               </div>
               <div class="stat-value">{{ todayTaskCount }}</div>
             </div>
@@ -257,7 +257,7 @@
             <div class="stat-card stat-card--purple">
               <div class="stat-top">
                 <div class="stat-icon">✅</div>
-                <div class="stat-title">已完成任务总量</div>
+                <div class="stat-title">已完成任务数量</div>
               </div>
               <div class="stat-value">{{ completedTaskCount }}</div>
             </div>
@@ -349,8 +349,13 @@ const formatDuration = (mins) => {
 
 const todayStudyDuration = computed(() => formatDuration(overviewStats.value.today_minutes || 0))
 const totalStudyDuration = computed(() => formatDuration(overviewStats.value.total_minutes || 0))
-const todayTaskCount = computed(() => overviewStats.value.today_task_count || 0)
-const completedTaskCount = computed(() => overviewStats.value.completed_task_count || 0)
+const todayTaskCount = computed(() => tasks.value.length || overviewStats.value.today_task_count || 0)
+const completedTaskCount = computed(() => {
+  if (tasks.value.length > 0) {
+    return tasks.value.filter(task => task.status === 'done' || task.completed).length
+  }
+  return overviewStats.value.completed_task_count || 0
+})
 
 const getPriorityType = (priority) => {
   const types = { 1: 'danger', 2: 'warning', 3: 'info' }

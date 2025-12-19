@@ -16,6 +16,7 @@
         class="chart" 
         :option="chartOption" 
         :autoresize="true"
+        :update-options="{ notMerge: true }"
         v-loading="loading"
       />
     </div>

@@ -201,6 +201,7 @@
                 <el-tag 
                   :type="plan.displayStatus === '已完成' ? 'success' : plan.displayStatus === '进行中' ? 'warning' : 'info'" 
                   size="small"
+                  :style="{ color: '#000000' }"
                 >
                   {{ plan.displayStatus }}
                 </el-tag>
@@ -369,6 +370,27 @@ const dashboardTasks = computed(() => {
     .sort((a, b) => Number(a.completed) - Number(b.completed))
 })
 
+const PLAN_STATUS = {
+  notStarted: '未开始',
+  inProgress: '进行中',
+  finished: '已结束'
+}
+
+const resolvePlanStatus = (plan) => {
+  const start = plan.time_start
+  const end = plan.time_end
+  const fallback = plan.status || PLAN_STATUS.notStarted
+  if (!start || !end) return fallback
+  const planDate = plan.date ? dayjs(plan.date).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
+  const startTime = dayjs(`${planDate} ${start}`)
+  const endTime = dayjs(`${planDate} ${end}`)
+  if (!startTime.isValid() || !endTime.isValid()) return fallback
+  const now = dayjs()
+  if (now.isBefore(startTime)) return PLAN_STATUS.notStarted
+  if (now.isAfter(endTime)) return PLAN_STATUS.finished
+  return PLAN_STATUS.inProgress
+}
+
 const dashboardPlans = computed(() => {
   const today = dayjs().format('YYYY-MM-DD')
   return plans.value
@@ -382,7 +404,7 @@ const dashboardPlans = computed(() => {
         : (plan.time || ''),
       displayTitle: plan.task_title || plan.title || '自由学习',
       displayCourse: plan.course || plan.description || '',
-      displayStatus: plan.status || '未开始'
+      displayStatus: resolvePlanStatus(plan)
     }))
 })
 
@@ -977,6 +999,11 @@ onUnmounted(() => {
 
 .plan-status {
   flex-shrink: 0;
+}
+
+.plan-status :deep(.el-tag),
+.plan-status :deep(.el-tag__content) {
+  color: #000 !important;
 }
 
 /* 统计卡片样式已移除（使用统一卡片样式） */
