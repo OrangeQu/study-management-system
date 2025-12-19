@@ -285,7 +285,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { Clock, Edit, Delete } from '@element-plus/icons-vue'
@@ -296,6 +296,7 @@ import PlanForm from '@/components/plan/PlanForm.vue'
 import { listTasks, createTask, updateTask, deleteTask as apiDeleteTask, updateTaskStatus } from '@/api/tasks'
 import { listPlans, createPlan, updatePlan, deletePlan as apiDeletePlan } from '@/api/plans'
 import { sendMessage as sendChatMessage } from '@/api/chat'
+import { overviewStats as apiOverviewStats } from '@/api/study'
 
 const showTaskDialog = ref(false)
 const showPlanDialog = ref(false)
@@ -326,6 +327,7 @@ const chatMessages = ref([
   }
 ])
 const conversationId = ref(null)
+const overviewStats = ref({})
 
 const filteredTasks = computed(() => {
   return tasks.value.filter(task => {
@@ -338,22 +340,6 @@ const filteredTasks = computed(() => {
   })
 })
 
-// 今日学习时长（从 todayPlans 的 time_start/time_end 计算）
-const todayStudyMinutes = computed(() => {
-  let total = 0
-  todayPlans.value.forEach(p => {
-    if (p.time_start && p.time_end) {
-      const start = dayjs(p.time_start, 'HH:mm')
-      const end = dayjs(p.time_end, 'HH:mm')
-      const diff = end.diff(start, 'minute')
-      if (diff > 0) total += diff
-    } else if (p.duration_minutes) {
-      total += Number(p.duration_minutes) || 0
-    }
-  })
-  return total
-})
-
 const formatDuration = (mins) => {
   if (!mins || mins <= 0) return '0分'
   const h = Math.floor(mins / 60)
@@ -361,45 +347,10 @@ const formatDuration = (mins) => {
   return h > 0 ? `${h}小时${m}分` : `${m}分`
 }
 
-const todayStudyDuration = computed(() => formatDuration(todayStudyMinutes.value))
-
-const todayTaskCount = computed(() => {
-  const today = dayjs().format('YYYY-MM-DD')
-  return tasks.value.filter(t => {
-    if (!t) return false
-    if (t.date && t.date === today) return true
-    if (t.deadline && dayjs(t.deadline).isSame(dayjs(), 'day')) return true
-    return false
-  }).length
-})
-
-const completedTaskCount = computed(() => {
-  return tasks.value.filter(t => t && (t.status === 'done' || t.completed)).length
-})
-
-// 总学习时长：尝试从 tasks 和 todayPlans 中累加可能的 duration 字段
-const totalStudyMinutes = computed(() => {
-  let total = 0
-  // todayPlans may only include today's plans; include their durations if available
-  todayPlans.value.forEach(p => {
-    if (p.duration_minutes) total += Number(p.duration_minutes) || 0
-    else if (p.time_start && p.time_end) {
-      const start = dayjs(p.time_start, 'HH:mm')
-      const end = dayjs(p.time_end, 'HH:mm')
-      const diff = end.diff(start, 'minute')
-      if (diff > 0) total += diff
-    }
-  })
-  // include durations from tasks if they have a duration field
-  tasks.value.forEach(t => {
-    if (!t) return
-    if (t.duration_minutes) total += Number(t.duration_minutes) || 0
-    else if (t.estimated_minutes) total += Number(t.estimated_minutes) || 0
-  })
-  return total
-})
-
-const totalStudyDuration = computed(() => formatDuration(totalStudyMinutes.value))
+const todayStudyDuration = computed(() => formatDuration(overviewStats.value.today_minutes || 0))
+const totalStudyDuration = computed(() => formatDuration(overviewStats.value.total_minutes || 0))
+const todayTaskCount = computed(() => overviewStats.value.today_task_count || 0)
+const completedTaskCount = computed(() => overviewStats.value.completed_task_count || 0)
 
 const getPriorityType = (priority) => {
   const types = { 1: 'danger', 2: 'warning', 3: 'info' }
@@ -449,7 +400,7 @@ const deleteTask = async (taskId) => {
       type: 'warning'
     })
     await apiDeleteTask(taskId)
-    await loadTasks()
+    await Promise.all([loadTasks(), loadOverviewStats()])
     ElMessage.success('任务已删除')
   } catch (error) {
     if (error !== 'cancel') ElMessage.error(error.message || '删除失败')
@@ -460,7 +411,7 @@ const toggleTaskStatus = async (task) => {
   try {
     task.status = task.completed ? 'done' : 'todo'
     await updateTaskStatus(task.id, { status: task.status, completed: task.completed })
-    await loadTasks()
+    await Promise.all([loadTasks(), loadOverviewStats()])
     ElMessage.success('任务状态已更新')
   } catch (e) {
     ElMessage.error(e.message || '更新状态失败')
@@ -477,7 +428,7 @@ const saveTask = async (taskData) => {
       ElMessage.success('任务更新成功')
     }
     showTaskDialog.value = false
-    await loadTasks()
+    await Promise.all([loadTasks(), loadOverviewStats()])
   } catch (e) {
     ElMessage.error(e.message || '保存任务失败')
   }
@@ -596,8 +547,26 @@ const loadPlans = async () => {
   todayPlans.value = resp.data.data || []
 }
 
+const loadOverviewStats = async () => {
+  try {
+    const resp = await apiOverviewStats()
+    overviewStats.value = resp.data?.data || {}
+  } catch (error) {
+    overviewStats.value = {}
+  }
+}
+
+const handleSessionRecorded = () => {
+  loadOverviewStats()
+}
+
 onMounted(async () => {
-  await Promise.all([loadTasks(), loadPlans()])
+  await Promise.all([loadTasks(), loadPlans(), loadOverviewStats()])
+  window.addEventListener('study-session-recorded', handleSessionRecorded)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('study-session-recorded', handleSessionRecorded)
 })
 </script>
 

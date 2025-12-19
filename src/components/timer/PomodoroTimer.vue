@@ -78,162 +78,395 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Check } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import { recordSession } from '@/api/study'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { startSession, updateSession, todayStats } from '@/api/study'
 import { useMainStore } from '@/stores'
 
-// 计时器状态
-const mode = ref('work') // work, break
-const isRunning = ref(false)
-const timeLeft = ref(0) // 以秒为单位
-const timerInterval = ref(null)
-
-// 设置
 const store = useMainStore()
+const STORAGE_KEY = 'pomodoroActiveSession'
+
+const mode = ref('work')
+const isRunning = ref(false)
+const timeLeft = ref(0)
+const timerInterval = ref(null)
 const workDuration = ref(store.studySettings.pomodoroWork || 25)
 const breakDuration = ref(store.studySettings.pomodoroBreak || 5)
 const completedPomodoros = ref(0)
-const sessionStart = ref(null)
 
-// 计算属性
+const activeSessionId = ref(null)
+const sessionDuration = ref(0) // seconds
+const elapsedSeconds = ref(0)
+const runStartedAt = ref(null)
+const sessionEndAt = ref(null)
+
 const minutes = computed(() => Math.floor(timeLeft.value / 60))
 const seconds = computed(() => timeLeft.value % 60)
 
-const modeText = computed(() => {
-  const texts = {
-    work: '专注时间',
-    break: '休息时间'
-  }
-  return texts[mode.value]
-})
+const modeText = computed(() => (mode.value === 'work' ? '专注时间' : '休息时间'))
 
-// 初始化时间
-const initializeTime = () => {
-  switch(mode.value) {
-    case 'work':
-      timeLeft.value = workDuration.value * 60
-      break
-    case 'break':
-      timeLeft.value = breakDuration.value * 60
-      break
+const currentElapsed = () => {
+  if (!runStartedAt.value) {
+    return elapsedSeconds.value
   }
+  const diff = Math.floor((Date.now() - runStartedAt.value.getTime()) / 1000)
+  return Math.min(sessionDuration.value, elapsedSeconds.value + Math.max(diff, 0))
 }
 
-// 切换模式
-const switchMode = (newMode) => {
-  resetTimer()
-  mode.value = newMode
-  initializeTime()
-  sessionStart.value = null
+const getModeDurationSeconds = () => {
+  const duration = mode.value === 'work' ? workDuration.value : breakDuration.value
+  return Math.max(1, duration) * 60
 }
 
-// 切换计时器状态
-const toggleTimer = () => {
-  if (isRunning.value) {
-    pauseTimer()
-  } else {
-    startTimer()
-  }
+const elapsedMinutesText = () => {
+  const minutes = Math.max(1, Math.ceil(currentElapsed() / 60))
+  return minutes >= 60 ? `${(minutes / 60).toFixed(1)}小时` : `${minutes}分钟`
 }
 
-// 开始计时
-const startTimer = () => {
-  if (timeLeft.value <= 0) {
-    ElMessage.warning('时间已到！请切换模式或重置')
+const updateTimeLeft = () => {
+  if (sessionDuration.value <= 0) return
+  timeLeft.value = Math.max(sessionDuration.value - currentElapsed(), 0)
+}
+
+const persistActiveSession = () => {
+  if (!activeSessionId.value) {
+    localStorage.removeItem(STORAGE_KEY)
     return
   }
-  
-  isRunning.value = true
-  sessionStart.value = new Date()
-  timerInterval.value = setInterval(async () => {
-    timeLeft.value--
-    
-    if (timeLeft.value <= 0) {
-      clearInterval(timerInterval.value)
-      isRunning.value = false
-      await handleSessionComplete(mode.value)
-      playCompletionSound()
-      
-      if (mode.value === 'work') {
-        completedPomodoros.value++
-        ElMessage.success('专注时间结束，开始休息！')
-        mode.value = 'break'
-      } else {
-        ElMessage.success('休息结束，开始专注！')
-        mode.value = 'work'
-      }
-      
-      initializeTime()
-    }
-  }, 1000)
+  const payload = {
+    id: activeSessionId.value,
+    mode: mode.value,
+    durationSeconds: sessionDuration.value,
+    elapsedSeconds: currentElapsed(),
+    isRunning: isRunning.value,
+    runStartedAt: runStartedAt.value ? runStartedAt.value.toISOString() : null,
+    endTimestamp: sessionEndAt.value ? sessionEndAt.value.getTime() : null
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+  } catch (e) {
+    // ignore storage errors
+  }
 }
 
-// 暂停计时
-const pauseTimer = () => {
-  isRunning.value = false
+const clearTimerInterval = () => {
   if (timerInterval.value) {
     clearInterval(timerInterval.value)
     timerInterval.value = null
   }
 }
 
-// 重置计时
-const resetTimer = () => {
-  pauseTimer()
-  initializeTime()
-  sessionStart.value = null
-}
-
-// 播放完成声音
-const playCompletionSound = () => {
-  const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3')
-  audio.play().catch(e => console.log('音频播放失败:', e))
-}
-
-// 更新设置
-const updateSettings = () => {
-  resetTimer()
-}
-
-const handleSessionComplete = async (finishedMode) => {
-  const duration = finishedMode === 'work' ? workDuration.value : breakDuration.value
-  try {
-    await recordSession({
-      type: 'pomodoro',
-      mode: finishedMode,
-      duration_minutes: duration,
-      started_at: sessionStart.value ? sessionStart.value.toISOString() : undefined
-    })
-    window.dispatchEvent(new CustomEvent('study-session-recorded'))
-  } catch (error) {
-    ElMessage.error(error.message || '记录学习时长失败')
-  } finally {
-    sessionStart.value = null
+const initializeTime = () => {
+  sessionDuration.value = getModeDurationSeconds()
+  elapsedSeconds.value = 0
+  runStartedAt.value = null
+  timeLeft.value = sessionDuration.value
+  isRunning.value = false
+  if (mode.value !== 'work') {
+    activeSessionId.value = null
+    sessionEndAt.value = null
+    persistActiveSession()
   }
 }
 
-// 同步学习偏好
-onMounted(() => {
-  completedPomodoros.value = Number(localStorage.getItem('pomodoroCompleted') || 0)
+const loadTodaySummary = async () => {
+  try {
+    const resp = await todayStats()
+    completedPomodoros.value = resp.data?.data?.pomodoroCount || 0
+  } catch (error) {
+    completedPomodoros.value = 0
+  }
+}
+
+const beginTicking = () => {
+  clearTimerInterval()
+  timerInterval.value = setInterval(async () => {
+    updateTimeLeft()
+    if (timeLeft.value <= 0) {
+      clearTimerInterval()
+      await handleTimerFinished()
+    } else {
+      persistActiveSession()
+    }
+  }, 1000)
+}
+
+const resumeTimer = () => {
+  if (timeLeft.value <= 0) return
+  runStartedAt.value = new Date()
+  isRunning.value = true
+  beginTicking()
+  persistActiveSession()
+}
+
+const createRemoteSession = async () => {
+  const durationMinutes = mode.value === 'work' ? workDuration.value : breakDuration.value
+  sessionDuration.value = durationMinutes * 60
+  elapsedSeconds.value = 0
+  timeLeft.value = sessionDuration.value
+  try {
+    const resp = await startSession({
+      type: 'pomodoro',
+      mode: mode.value,
+      duration_minutes: durationMinutes
+    })
+    activeSessionId.value = resp.data?.data?.id
+    const endAt = resp.data?.data?.end_at
+    sessionEndAt.value = endAt ? new Date(endAt) : new Date(Date.now() + sessionDuration.value * 1000)
+  } catch (error) {
+    ElMessage.error(error.message || '开启番茄钟失败')
+    throw error
+  }
+  persistActiveSession()
+}
+
+const startTimer = async () => {
+  if (timeLeft.value <= 0) {
+    ElMessage.warning('时间已到！请切换模式或重置')
+    return
+  }
+  if (mode.value === 'work' && !activeSessionId.value) {
+    await createRemoteSession()
+  }
+  resumeTimer()
+}
+
+const pauseTimer = () => {
+  if (!isRunning.value) return
+  elapsedSeconds.value = currentElapsed()
+  runStartedAt.value = null
+  isRunning.value = false
+  clearTimerInterval()
+  persistActiveSession()
+}
+
+const promptFinishOnPause = async () => {
+  try {
+    await ElMessageBox.confirm(
+      `${mode.value === 'work' ? '已专注' : '已休息'} ${elapsedMinutesText()}，是否立即结束？`,
+      '结束本次',
+      {
+        confirmButtonText: '结束本次',
+        cancelButtonText: '继续计时',
+        type: 'warning',
+        distinguishCancelAndClose: true
+      }
+    )
+    await handleManualCompletion()
+  } catch (error) {
+    if (error === 'cancel' || error === 'close') {
+      resumeTimer()
+    }
+  }
+}
+
+const abortActiveSession = async () => {
+  if (!activeSessionId.value) return
+  try {
+    await updateSession(activeSessionId.value, {}, { action: 'abort' })
+  } catch (error) {
+    // ignore abort errors
+  } finally {
+    activeSessionId.value = null
+    elapsedSeconds.value = 0
+    runStartedAt.value = null
+    persistActiveSession()
+  }
+}
+
+const resetTimer = async () => {
+  pauseTimer()
+  const hasProgress = currentElapsed() > 0
+  if (hasProgress) {
+    try {
+      await ElMessageBox.confirm(
+        `${mode.value === 'work' ? '已专注' : '已休息'} ${elapsedMinutesText()}，是否保存？`,
+        '结束本次',
+        {
+          confirmButtonText: '保存',
+          cancelButtonText: '放弃',
+          type: 'warning',
+          distinguishCancelAndClose: true
+        }
+      )
+      await handleManualCompletion()
+      return
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close') return
+    }
+  }
+  await abortActiveSession()
   initializeTime()
+}
+
+const toggleTimer = async () => {
+  if (isRunning.value) {
+    pauseTimer()
+    await promptFinishOnPause()
+  } else {
+    await startTimer()
+  }
+}
+
+const playCompletionSound = () => {
+  const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3')
+  audio.play().catch(() => {})
+}
+
+const completeRemoteSession = async () => {
+  if (!activeSessionId.value || mode.value !== 'work') return
+  const durationMinutes = Math.max(1, Math.ceil(currentElapsed() / 60))
+  try {
+    await updateSession(
+      activeSessionId.value,
+      {
+        duration_minutes: durationMinutes,
+        mode: mode.value,
+        type: 'pomodoro'
+      },
+      { action: 'complete' }
+    )
+    window.dispatchEvent(new CustomEvent('study-session-recorded'))
+    await loadTodaySummary()
+  } catch (error) {
+    ElMessage.error(error.message || '记录学习时间失败')
+  } finally {
+    activeSessionId.value = null
+    elapsedSeconds.value = 0
+    runStartedAt.value = null
+    sessionEndAt.value = null
+    isRunning.value = false
+    persistActiveSession()
+  }
+}
+
+const handleBreakCompletion = () => {
+  ElMessage.success('休息结束，开始专注！')
+  mode.value = 'work'
+  initializeTime()
+}
+
+const handleTransitionAfterWork = () => {
+  completedPomodoros.value++
+  ElMessage.success('专注结束，开始休息！')
+  mode.value = 'break'
+  initializeTime()
+}
+
+const handleManualCompletion = async () => {
+  if (mode.value === 'work') {
+    await completeRemoteSession()
+    handleTransitionAfterWork()
+  } else {
+    handleBreakCompletion()
+  }
+}
+
+const handleTimerFinished = async () => {
+  elapsedSeconds.value = sessionDuration.value
+  runStartedAt.value = null
+  playCompletionSound()
+
+  if (mode.value === 'work') {
+    await completeRemoteSession()
+    handleTransitionAfterWork()
+  } else {
+    handleBreakCompletion()
+  }
+}
+
+const switchMode = async (newMode) => {
+  if (mode.value === newMode) return
+  pauseTimer()
+  await abortActiveSession()
+  mode.value = newMode
+  initializeTime()
+}
+
+const restoreSession = async () => {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) {
+    initializeTime()
+    return
+  }
+  try {
+    const saved = JSON.parse(raw)
+    if (!saved?.id || !saved.durationSeconds) {
+      initializeTime()
+      return
+    }
+    activeSessionId.value = saved.id
+    mode.value = saved.mode || mode.value
+    sessionDuration.value = saved.durationSeconds
+    elapsedSeconds.value = Math.min(saved.elapsedSeconds || 0, sessionDuration.value)
+    isRunning.value = Boolean(saved.isRunning) && elapsedSeconds.value < sessionDuration.value
+    runStartedAt.value = saved.isRunning && saved.runStartedAt ? new Date(saved.runStartedAt) : null
+    sessionEndAt.value = saved.endTimestamp ? new Date(saved.endTimestamp) : null
+    updateTimeLeft()
+    if (timeLeft.value <= 0 && mode.value === 'work') {
+      try {
+        await ElMessageBox.confirm(
+          '已超过预计时间，是否结束本次？',
+          '超时提醒',
+          {
+            confirmButtonText: '结束本次',
+            cancelButtonText: '放弃',
+            type: 'warning',
+            distinguishCancelAndClose: true
+          }
+        )
+        await handleManualCompletion()
+        return
+      } catch (error) {
+        await abortActiveSession()
+        initializeTime()
+        return
+      }
+    }
+    if (isRunning.value) {
+      beginTicking()
+    }
+  } catch (error) {
+    initializeTime()
+    localStorage.removeItem(STORAGE_KEY)
+  }
+}
+
+const updateSettings = () => {
+  if (activeSessionId.value) return
+  initializeTime()
+}
+
+const beforeUnloadHandler = () => {
+  persistActiveSession()
+}
+
+onMounted(async () => {
+  await Promise.all([restoreSession(), loadTodaySummary()])
+  window.addEventListener('beforeunload', beforeUnloadHandler)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
+  clearTimerInterval()
+  persistActiveSession()
 })
 
 watch(() => store.studySettings.pomodoroWork, (val) => {
   if (typeof val === 'number' && val > 0) {
     workDuration.value = val
-    if (mode.value === 'work') resetTimer()
+    if (mode.value === 'work' && !activeSessionId.value) {
+      initializeTime()
+    }
   }
 })
 
 watch(() => store.studySettings.pomodoroBreak, (val) => {
   if (typeof val === 'number' && val > 0) {
     breakDuration.value = val
-    if (mode.value === 'break') resetTimer()
+    if (mode.value === 'break' && !activeSessionId.value) {
+      initializeTime()
+    }
   }
-})
-
-onUnmounted(() => {
-  localStorage.setItem('pomodoroCompleted', completedPomodoros.value.toString())
 })
 </script>
 

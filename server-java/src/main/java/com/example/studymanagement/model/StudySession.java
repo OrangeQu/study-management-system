@@ -21,12 +21,17 @@ public class StudySession {
     private Long planId;
     private LocalDateTime startedAt;
     private LocalDateTime createdAt;
+    private LocalDateTime endAt;
+    private String status; // running/completed/aborted
 
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
         if (startedAt == null) {
             startedAt = createdAt;
+        }
+        if (status == null || status.isBlank()) {
+            status = "running";
         }
     }
 }

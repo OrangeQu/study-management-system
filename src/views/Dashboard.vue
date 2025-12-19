@@ -305,7 +305,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
@@ -326,7 +326,7 @@ import TaskForm from '@/components/task/TaskForm.vue'
 import PlanForm from '@/components/plan/PlanForm.vue'
 import { listTasks, updateTaskStatus as apiUpdateTaskStatus, createTask, updateTask, summaryTasks } from '@/api/tasks'
 import { listPlans, createPlan, updatePlan } from '@/api/plans'
-import { todayStats as apiTodayStats, trendStats as apiTrendStats } from '@/api/study'
+import { overviewStats as apiOverviewStats } from '@/api/study'
 import { statsGrades } from '@/api/grades'
 import { useMainStore } from '@/stores'
 
@@ -484,7 +484,7 @@ const goalAlerts = computed(() => {
     const target = dailyGoal * 60
     if (todayStudyTime.value < target) {
       alerts.push({
-        title: '今日学习目标未达成',
+        title: '今日学习目标：',
         description: `已学习 ${formatHours(todayStudyTime.value)} 小时 / 目标 ${dailyGoal} 小时`
       })
     }
@@ -493,7 +493,7 @@ const goalAlerts = computed(() => {
     const target = weeklyGoal * 60
     if (weeklyStudyMinutes.value < target) {
       alerts.push({
-        title: '本周学习目标未达成',
+        title: '本周学习目标：',
         description: `已累计 ${formatHours(weeklyStudyMinutes.value)} 小时 / 目标 ${weeklyGoal} 小时`
       })
     }
@@ -528,7 +528,7 @@ const editTask = (task) => showTaskForm('edit', task)
 const updateTaskStatus = async (item) => {
   try {
     await apiUpdateTaskStatus(item.id, { status: item.completed ? 'done' : 'todo', completed: item.completed })
-    await Promise.all([loadTasks(), loadSummary()])
+    await Promise.all([loadTasks(), loadSummary(), loadOverviewStats()])
     ElMessage.success('任务状态已更新')
   } catch (e) {
     ElMessage.error(e.message || '更新任务状态失败')
@@ -545,7 +545,7 @@ const handleTaskSubmit = async (taskData) => {
       ElMessage.success('任务更新成功')
     }
     showTaskDialog.value = false
-    await Promise.all([loadTasks(), loadSummary()])
+    await Promise.all([loadTasks(), loadSummary(), loadOverviewStats()])
   } catch (e) {
     ElMessage.error(e.message || '提交任务失败')
   }
@@ -600,21 +600,14 @@ const loadSummary = async () => {
   }
 }
 
-const loadStudyStats = async () => {
+const loadOverviewStats = async () => {
   try {
-    const resp = await apiTodayStats()
-    todayStudyTime.value = resp.data?.data?.studyMinutes || 0
+    const resp = await apiOverviewStats()
+    const data = resp.data?.data || {}
+    todayStudyTime.value = data.today_minutes || 0
+    weeklyStudyMinutes.value = data.week_minutes || 0
   } catch (e) {
     todayStudyTime.value = 0
-  }
-}
-
-const loadWeeklyStats = async () => {
-  try {
-    const resp = await apiTrendStats({ range: 7 })
-    const daily = resp.data?.data?.daily || resp.data?.data?.trend || []
-    weeklyStudyMinutes.value = daily.reduce((sum, item) => sum + Number(item.minutes || 0), 0)
-  } catch (e) {
     weeklyStudyMinutes.value = 0
   }
 }
@@ -628,15 +621,23 @@ const loadGpaStats = async () => {
   }
 }
 
+const handleSessionRecorded = () => {
+  loadOverviewStats()
+}
+
 onMounted(async () => {
   await Promise.all([
     loadTasks(),
     loadPlans(),
-    loadStudyStats(),
-    loadWeeklyStats(),
+    loadOverviewStats(),
     loadSummary(),
     loadGpaStats()
   ])
+  window.addEventListener('study-session-recorded', handleSessionRecorded)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('study-session-recorded', handleSessionRecorded)
 })
 </script>
 

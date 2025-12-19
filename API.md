@@ -26,7 +26,7 @@ DEEPSEEK_API_BASE=https://api.deepseek.com
 - tasks：id, user_id, title, description, type, priority, deadline, course, status(todo/doing/done), completed, tags(JSON), created_at, updated_at
 - plans：id, user_id, time_start, time_end, task_title, task_id, course, description, status, date, created_at, updated_at
 - grades：id, user_id, course_code, course_name, credit, score, grade_point, course_type, semester, academic_year, status, is_required, created_at, updated_at
-- study_sessions：id, user_id, type(pomodoro/study), duration_minutes, mode(work/break), task_id, plan_id, started_at, created_at
+- study_sessions：id, user_id, type(pomodoro/study), duration_minutes, mode(work/break), task_id, plan_id, started_at, end_at, status(running/completed/aborted), created_at
 - settings：id, user_id, preferences(JSON，含 theme、pomodoroWork/Break、taskReminder、dailyGoal、weeklyGoal、uiFlags 等)，created_at, updated_at
 
 ## 认证与用户
@@ -96,13 +96,20 @@ DEEPSEEK_API_BASE=https://api.deepseek.com
   - return：{ currentSemesterGPA, totalGPA, passRate, totalCredits, passedCredits, totalCourses, passedCourses, trend:[{semester,gpa}] }
 
 ## 学习记录 / 计时
-- POST /api/study-sessions  
-  - body：{ type:'pomodoro'|'study', duration_minutes, mode(work/break), task_id?, plan_id?, started_at? }
-- GET /api/study-stats/today  
+- POST /api/study/sessions
+  - body：{ type:'pomodoro'|'study', duration_minutes, mode(work/break), task_id?, plan_id?, started_at?, status? } —— 直接写入一条学习记录
+- POST /api/study/sessions/start
+  - body：{ type, mode, duration_minutes }
+  - return：{ id, started_at, end_at }（番茄钟运行中会话）
+- PATCH /api/study/sessions/{id}?action=complete|abort
+  - body(action=complete)：{ duration_minutes, mode?, type? }
+- GET /api/study/stats/today
   - return：{ studyMinutes, pomodoroCount }
-- GET /api/study-stats/trend  
-  - query：range=7/30  
+- GET /api/study/stats/trend
+  - query：range=7/30
   - return：按日/周时长序列
+- GET /api/study/stats/overview
+  - return：{ today_minutes, week_minutes, total_minutes, today_goal_minutes, week_goal_minutes, today_goal_completed, week_goal_completed, today_pomodoro_count, total_pomodoro_count, today_task_count, completed_task_count }
 
 ## AI 聊天（DeepSeek 占位）
 - POST /api/chat/messages  
