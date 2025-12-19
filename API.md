@@ -53,6 +53,21 @@ DEEPSEEK_API_BASE=https://api.deepseek.com
 - DELETE /api/user/devices/{id}  
   - 功能：下线指定设备
 
+## 管理员操作
+- 所有 `/api/admin/users/**` 接口受 `@PreAuthorize("hasRole('ADMIN')")` 保护，仅管理员可访问，统一返回 `{ code, message, data }`。
+- GET /api/admin/users  
+  - query：`page`、`pageSize`、`q`（用户名或邮箱模糊）  
+  - return：`{ list:[{id,username,nickname,email,role}], total, page }`
+- POST /api/admin/users  
+  - body：`{ username, password, nickname?, email?, role? }`（role 以 `admin`/`user` 区分）  
+  - return：新建用户信息（除密码外）
+- PUT /api/admin/users/{id}  
+  - body：可选 `{ username, password, nickname, email, role }`，会校验唯一性
+- PUT /api/admin/users/{id}/password  
+  - body：`{ password }`，允许管理员重置密码
+- DELETE /api/admin/users/{id}  
+  - 功能：删除用户记录
+
 ## 任务 Task
 - GET /api/tasks  
   - query：search, status(todo/doing/done), priority(1/2/3), type, deadline_from, deadline_to, sort, page, pageSize
