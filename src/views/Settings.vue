@@ -105,7 +105,7 @@
                   <el-radio-group v-model="profileForm.gender">
                     <el-radio label="male">男</el-radio>
                     <el-radio label="female">女</el-radio>
-                    <el-radio label="other">其他</el-radio>
+                    <el-radio label="other">隐藏</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </div>

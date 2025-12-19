@@ -358,26 +358,15 @@ const reminderThresholdHours = computed(() => {
 // welcome card removed — unused computed values omitted
 
 const dashboardTasks = computed(() => {
-  const now = dayjs()
-  const today = now.format('YYYY-MM-DD')
-  const todayTasks = tasks.value.filter(task => {
-    if (!task.deadline) return false
-    const taskDate = dayjs(task.deadline).format('YYYY-MM-DD')
-    return taskDate === today
-  })
-  const upcomingTasks = tasks.value.filter(task => {
-    if (!task.deadline) return false
-    const diffHours = dayjs(task.deadline).diff(now, 'hour')
-    return diffHours >= 0 && diffHours <= 24
-  })
-  const source = todayTasks.length > 0
-    ? todayTasks
-    : (upcomingTasks.length > 0 ? upcomingTasks : tasks.value)
   const priorityOrder = { 1: 1, 2: 2, 3: 3 }
-  return source
+  return [...tasks.value]
+    .sort((a, b) => {
+      const aDeadline = a.deadline ? dayjs(a.deadline).valueOf() : Number.MAX_SAFE_INTEGER
+      const bDeadline = b.deadline ? dayjs(b.deadline).valueOf() : Number.MAX_SAFE_INTEGER
+      return aDeadline - bDeadline
+    })
     .sort((a, b) => (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3))
     .sort((a, b) => Number(a.completed) - Number(b.completed))
-    .slice(0, 3)
 })
 
 const dashboardPlans = computed(() => {
@@ -1103,7 +1092,7 @@ onUnmounted(() => {
 }
 
 .todo-deadline {
-  color: var(--accent);
+  color: #333333;
   font-weight: 500;
 }
 
