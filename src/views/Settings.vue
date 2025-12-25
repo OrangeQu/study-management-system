@@ -798,7 +798,7 @@ const clearCompletedTasks = () => {
     } catch (error) {
       ElMessage.error(error.message || '操作失败')
     }
-  })
+  }).catch(() => {})
 }
 
 const clearHistory = () => {
@@ -817,7 +817,7 @@ const clearHistory = () => {
     } catch (error) {
       ElMessage.error(error.message || '操作失败')
     }
-  })
+  }).catch(() => {})
 }
 
 const handleLogout = async () => {

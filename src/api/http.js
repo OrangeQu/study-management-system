@@ -4,7 +4,7 @@ const baseURL = process.env.VUE_APP_API_BASE || 'http://localhost:8080/api'
 
 const http = axios.create({
   baseURL,
-  timeout: 10000
+  timeout: 100000
 })
 
 let isRefreshing = false

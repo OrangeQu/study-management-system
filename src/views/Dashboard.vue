@@ -61,7 +61,7 @@
                   <router-link to="/settings" class="action-link">
                     <el-button type="primary" class="action-btn">
                       <el-icon><Setting /></el-icon>
-                      <span class="action-text">学习设置</span>
+                      <span class="action-text">设置</span>
                     </el-button>
                   </router-link>
                 </div>

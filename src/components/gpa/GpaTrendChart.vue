@@ -301,10 +301,19 @@ onUnmounted(() => {
 
 .chart-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 20px;
   padding: 0 10px;
+  text-align: center;
+}
+
+.header-left {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .header-left h3 {
@@ -315,16 +324,25 @@ onUnmounted(() => {
 
 .chart-stats {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 20px;
+  text-align: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
 }
 
 .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   font-size: 13px;
 }
 
 .stat-label {
   color: #666;
-  margin-right: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-value {

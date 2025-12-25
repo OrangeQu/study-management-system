@@ -24,11 +24,11 @@
     <div class="chart-stats">
       <div class="stat-item">
         <div class="stat-value">{{ totalStudyTime }}h</div>
-        <div class="stat-label">本周总时长</div>
+        <div class="stat-label">本周学习总时长</div>
       </div>
       <div class="stat-item">
         <div class="stat-value">{{ avgDailyTime }}h</div>
-        <div class="stat-label">日均学习</div>
+        <div class="stat-label">本周日均学习</div>
       </div>
       <div class="stat-item">
         <div class="stat-value">{{ completionRate }}%</div>
