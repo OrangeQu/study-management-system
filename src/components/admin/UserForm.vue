@@ -42,9 +42,22 @@ const emits = defineEmits(['update:visible', 'saved'])
 const formRef = ref(null)
 const form = ref({ username: '', nickname: '', email: '', role: 'user', password: '' })
 
+const duplicateErrorPattern = /(用户(名)?已存在|用户名.*存在|username already exists|user already exists)/i
+
 const rules = {
   username: [ { required: true, message: '用户名不能为空', trigger: 'blur' } ],
   email: [ { type: 'email', message: '邮箱格式不正确', trigger: 'blur' } ]
+}
+
+const resolveUserFormErrorMessage = (error) => {
+  const sourceMessage = error?.data?.message || error?.message
+  if (sourceMessage && duplicateErrorPattern.test(sourceMessage)) {
+    return '用户已存在'
+  }
+  if (!props.user && error?.status === 403) {
+    return '用户已存在'
+  }
+  return sourceMessage || '保存失败'
 }
 
 watch(() => props.user, (v) => {
@@ -71,7 +84,7 @@ const save = async () => {
     }
     emits('saved')
   } catch (e) {
-    ElMessage.error(e.message || '保存失败')
+    ElMessage.error(resolveUserFormErrorMessage(e))
   }
 }
 </script>

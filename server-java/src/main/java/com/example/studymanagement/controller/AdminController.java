@@ -66,9 +66,6 @@ public class AdminController {
         if (userRepository.existsByUsername(req.getUsername())) {
             return failure("用户名已存在", 400, HttpStatus.BAD_REQUEST);
         }
-        if (StringUtils.hasText(req.getEmail()) && userRepository.existsByEmail(req.getEmail())) {
-            return failure("邮箱已被使用", 400, HttpStatus.BAD_REQUEST);
-        }
         User user = new User();
         user.setUsername(req.getUsername());
         user.setNickname(req.getNickname());
@@ -151,10 +148,18 @@ public class AdminController {
     }
 
     private ResponseEntity<Map<String, Object>> success(Object data) {
-        return ResponseEntity.ok(Map.of("code", 0, "message", "ok", "data", data));
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("code", 0);
+        payload.put("message", "ok");
+        payload.put("data", data);
+        return ResponseEntity.ok(payload);
     }
 
     private ResponseEntity<Map<String, Object>> failure(String message, int code, HttpStatus status) {
-        return ResponseEntity.status(status).body(Map.of("code", code, "message", message, "data", null));
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("code", code);
+        payload.put("message", message);
+        payload.put("data", null);
+        return ResponseEntity.status(status).body(payload);
     }
 }

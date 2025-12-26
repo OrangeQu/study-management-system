@@ -137,6 +137,7 @@ import {
   CircleCheckFilled 
 } from '@element-plus/icons-vue'
 import { register as registerApi, login as loginApi } from '@/api/auth'
+import { getFriendlyErrorMessage } from '@/utils/errorMessage'
 import { useMainStore } from '@/stores'
 
 const router = useRouter()
@@ -249,7 +250,8 @@ const handleRegister = async () => {
     router.push('/dashboard')
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(error.message || '注册失败，请稍后重试')
+      const detail = getFriendlyErrorMessage(error)
+      ElMessage.error(`注册失败：${detail}`)
     }
   } finally {
     loading.value = false

@@ -53,18 +53,19 @@
       </div>
       <div class="filter-group">
         <span class="filter-label">类型:</span>
-        <el-select
-          v-model="filters.courseType"
-          placeholder="课程类型"
-          clearable
-          class="filter-select"
-          @change="handleFilterChange"
-        >
-          <el-option label="全部" value="" />
-          <el-option label="必修" value="required" />
-          <el-option label="选修" value="elective" />
-          <el-option label="通识" value="general" />
-        </el-select>
+          <el-select
+            v-model="filters.courseType"
+            placeholder="课程类型"
+            clearable
+            class="filter-select"
+            @change="handleFilterChange"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="必修" value="required" />
+            <el-option label="选修" value="elective" />
+            <el-option label="通识" value="general" />
+            <el-option label="实践" value="practice" />
+          </el-select>
       </div>
     </div>
 

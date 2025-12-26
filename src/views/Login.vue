@@ -103,6 +103,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useMainStore } from '@/stores'
 import { login as loginApi } from '@/api/auth'
+import { getFriendlyErrorMessage } from '@/utils/errorMessage'
 
 const router = useRouter()
 const loading = ref(false)
@@ -135,7 +136,8 @@ const handleLogin = async () => {
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (error) {
-    ElMessage.error(error.message || '登录失败，请稍后再试')
+    const detail = getFriendlyErrorMessage(error)
+    ElMessage.error(`登录失败：${detail}`)
   } finally {
     loading.value = false
   }

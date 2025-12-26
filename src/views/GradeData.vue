@@ -796,7 +796,19 @@ const escapeCsvValue = (value) => {
   return /[",\n]/.test(str) ? `"${str}"` : str
 }
 
-const gradeCsvHeaders = ['课程名称', '课程类型', '学分', '成绩', '绩点', '学期', '学年', '教师']
+const courseTypeLabels = {
+  required: '必修',
+  elective: '选修',
+  general: '通识',
+  practice: '实践'
+}
+
+const formatCourseTypeForExport = (courseType) => {
+  if (!courseType && courseType !== 0) return ''
+  return courseTypeLabels[courseType] || courseType
+}
+
+const gradeCsvHeaders = ['课程名称', '课程类型', '学分', '成绩', '绩点', '学期', '学年']
 const importTemplateHeaders = [
   '课程代码',
   '课程名称',
@@ -811,13 +823,12 @@ const importTemplateSample = ['CS101', '程序设计基础', '3.0', '92', '', '�
 
 const formatGradeRow = (item) => ([
   item.course_name,
-  item.course_type,
+  formatCourseTypeForExport(item.course_type),
   item.credit ?? item.credits ?? '',
   item.score,
   item.grade_point,
   item.semester,
   item.academic_year,
-  item.teacher || ''
 ].map(escapeCsvValue).join(','))
 
 const downloadGradesCsv = (records, suffix) => {

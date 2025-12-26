@@ -80,11 +80,17 @@ http.interceptors.response.use(
       }
     }
 
+    const responseData = error.response?.data
     const message =
-      error.response?.data?.message ||
+      responseData?.message ||
       error.message ||
       '请求失败，请稍后重试'
-    return Promise.reject(new Error(message))
+    const processedError = new Error(message)
+    processedError.status = status
+    processedError.code = responseData?.code
+    processedError.data = responseData
+    processedError.response = error.response
+    return Promise.reject(processedError)
   }
 )
 

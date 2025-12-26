@@ -10,9 +10,11 @@ import com.example.studymanagement.service.LoginDeviceService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,10 +66,18 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest servletRequest) {
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
+        var userOptional = userRepository.findByUsername(request.getUsername());
+        if (userOptional.isEmpty()) {
+            return failure("账号未注册", 401, HttpStatus.UNAUTHORIZED);
+        }
+        try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+        } catch (AuthenticationException ex) {
+            return failure("用户名或密码错误", 401, HttpStatus.UNAUTHORIZED);
+        }
+        User user = userOptional.get();
         String token = jwtService.generateToken(user);
         AuthResponse resp = new AuthResponse();
         resp.setToken(token);
@@ -116,5 +126,13 @@ public class AuthController {
         body.put("message", "ok");
         body.put("data", data);
         return ResponseEntity.ok(body);
+    }
+
+    private ResponseEntity<Map<String, Object>> failure(String message, int code, HttpStatus status) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", code);
+        body.put("message", message);
+        body.put("data", null);
+        return ResponseEntity.status(status).body(body);
     }
 }

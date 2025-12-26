@@ -410,14 +410,15 @@ const dashboardPlans = computed(() => {
 
 const urgentDeadlines = computed(() => {
   const now = dayjs()
-  const threshold = reminderThresholdHours.value
-  if (threshold <= 0) return []
+  const thresholdHours = reminderThresholdHours.value
+  if (thresholdHours <= 0) return []
+  const maxMinutes = thresholdHours * 60
   return tasks.value
     .filter(task => {
       if (!task.deadline || task.completed) return false
       const deadline = dayjs(task.deadline)
-      const diffHours = deadline.diff(now, 'hour')
-      return diffHours > 0 && diffHours <= threshold
+      const diffMinutes = deadline.diff(now, 'minute')
+      return diffMinutes >= 0 && diffMinutes <= maxMinutes
     })
     .map(task => ({
       id: task.id,

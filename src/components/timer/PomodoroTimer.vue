@@ -3,7 +3,7 @@
     <div class="timer-header">
       <h3>番茄钟</h3>
       <div class="mode-selector">
-        <el-radio-group v-model="mode" size="small" @change="switchMode">
+      <el-radio-group :model-value="mode" size="small" @change="switchMode">
           <el-radio-button label="work">专注</el-radio-button>
           <el-radio-button label="break">休息</el-radio-button>
         </el-radio-group>
