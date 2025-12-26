@@ -93,7 +93,7 @@
         </div>
 
         <div class="chart-row">
-          <StudyChart />
+          <StudyChart :tasks="tasks" />
         </div>
 
         <!-- bottom-row moved below to span full width -->

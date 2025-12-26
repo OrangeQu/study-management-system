@@ -263,7 +263,7 @@
         <el-form-item label="学期" prop="semester">
           <el-select
             v-model="gradeForm.semester"
-            placeholder="请选择或输入学期"
+            placeholder="格式如：2025-2026-1"
             style="width: 100%"
             filterable
             allow-create

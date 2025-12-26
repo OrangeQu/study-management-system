@@ -971,7 +971,7 @@ onMounted(async () => {
 
 .settings-menu .el-menu-item:hover {
   background: linear-gradient(90deg, var(--menu-primary), var(--menu-accent));
-  color: #fff;
+  color: #524646;
 }
 
 .settings-menu .el-menu-item .el-icon svg {

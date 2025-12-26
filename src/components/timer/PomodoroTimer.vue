@@ -499,7 +499,8 @@ watch(() => store.studySettings.pomodoroBreak, (val) => {
 .timer-display {
   text-align: center;
   margin: 12px 0;
-  padding: 18px 0;
+  padding: 28px 0;
+  min-height: 180px;
   border-radius: 10px;
   background-color: var(--accent); /* Replace gradient with solid orange */
   color: #fff;
@@ -515,11 +516,7 @@ watch(() => store.studySettings.pomodoroBreak, (val) => {
   background: var(--accent);
 }
 
-/* 专注（橙色）模式下高度加高，数字更突出 */
-.timer-display.work {
-  padding: 28px 0;
-  min-height: 180px;
-}
+/* 专注模式下数字更突出，保持与休息相同高度 */
 .timer-display.work .time-text {
   font-size: 56px;
 }

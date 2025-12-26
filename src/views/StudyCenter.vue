@@ -225,7 +225,7 @@
         <div class="overview-grid">
           <div class="overview-left">
             <div class="chart-wrapper">
-              <StudyChart />
+              <StudyChart :tasks="tasks" />
             </div>
           </div>
 
@@ -285,7 +285,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { Clock, Edit, Delete } from '@element-plus/icons-vue'
@@ -297,6 +297,7 @@ import { listTasks, createTask, updateTask, deleteTask as apiDeleteTask, updateT
 import { listPlans, createPlan, updatePlan, deletePlan as apiDeletePlan } from '@/api/plans'
 import { sendMessage as sendChatMessage } from '@/api/chat'
 import { overviewStats as apiOverviewStats } from '@/api/study'
+import { loadChatHistory, saveChatHistory } from '@/utils/chatStorage'
 
 const showTaskDialog = ref(false)
 const showPlanDialog = ref(false)
@@ -318,15 +319,15 @@ const messageList = ref(null)
 
 const tasks = ref([])
 const todayPlans = ref([])
-const chatMessages = ref([
-  {
-    id: 1,
-    type: 'ai',
-    content: '你好！我是你的学习助手。我可以帮你制定学习计划、解决学习问题等。',
-    time: new Date()
-  }
-])
-const conversationId = ref(null)
+const DEFAULT_CHAT_WELCOME = {
+  id: 1,
+  type: 'ai',
+  content: '你好！我是你的学习助手。我可以帮你制定学习计划、解决学习问题等。',
+  time: new Date()
+}
+const persistedChat = loadChatHistory()
+const chatMessages = ref(persistedChat?.messages?.length ? persistedChat.messages : [DEFAULT_CHAT_WELCOME])
+const conversationId = ref(persistedChat?.conversationId || null)
 const overviewStats = ref({})
 
 const filteredTasks = computed(() => {
@@ -541,6 +542,16 @@ const quickQuestion = (question) => {
   userInput.value = question
   sendMessage()
 }
+
+const persistChatState = () => {
+  saveChatHistory({
+    conversationId: conversationId.value,
+    messages: chatMessages.value
+  })
+}
+
+watch(chatMessages, persistChatState, { deep: true })
+watch(conversationId, persistChatState)
 
 const loadTasks = async () => {
   const resp = await listTasks({ page: 1, pageSize: 200 })
@@ -1110,7 +1121,7 @@ onUnmounted(() => {
 .quick-questions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 2px;
 }
 
 .quick-label {
@@ -1295,3 +1306,4 @@ onUnmounted(() => {
   .stat-card { flex: 1 }
 }
 </style>
+

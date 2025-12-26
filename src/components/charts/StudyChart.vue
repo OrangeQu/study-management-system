@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, defineProps } from 'vue'
 import dayjs from 'dayjs'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -66,6 +66,28 @@ use([
 ])
 
 const palette = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2']
+const props = defineProps({
+  tasks: {
+    type: Array,
+    default: () => []
+  }
+})
+const TYPE_ORDER = ['作业', '复习', '考试', '生活']
+const TYPE_COLORS = {
+  作业: '#409EFF',
+  复习: '#67C23A',
+  考试: '#E6A23C',
+  生活: '#F56C6C'
+}
+const buildEmptySubjectSeries = () => ([
+  { name: '暂无数据', value: 1, color: '#d9d9d9', disabled: true }
+])
+const getTypeColor = (type) => TYPE_COLORS[type] || '#909399'
+const isPendingTask = (task = {}) => {
+  if (!task) return false
+  if (task.completed) return false
+  return task.status !== 'done'
+}
 const activeChart = ref('daily')
 const loading = ref(false)
 const chartOption = ref({})
@@ -97,18 +119,34 @@ const dailySeries = computed(() => {
 })
 
 const subjectSeries = computed(() => {
-  const list = stats.value.distribution?.length ? stats.value.distribution : []
-  if (!list.length) {
-    return [{ name: '暂无数据', value: 0, color: '#d9d9d9', disabled: true }]
+  const pendingTasks = props.tasks.filter(isPendingTask)
+  if (!pendingTasks.length) {
+    return buildEmptySubjectSeries()
   }
-  return list.map((item, idx) => {
-    const minutes = Number(item.value || 0)
-    return {
-      name: translateType(item.name),
-      value: Number((minutes / 60).toFixed(1)),
-      color: palette[idx % palette.length]
+  const typeCounts = pendingTasks.reduce((map, task) => {
+    const normalizedType = task.type || '其他'
+    map[normalizedType] = (map[normalizedType] || 0) + 1
+    return map
+  }, {})
+  const series = []
+  TYPE_ORDER.forEach(type => {
+    if (typeCounts[type]) {
+      series.push({
+        name: type,
+        value: typeCounts[type],
+        color: getTypeColor(type)
+      })
     }
   })
+  Object.entries(typeCounts).forEach(([type, count]) => {
+    if (TYPE_ORDER.includes(type)) return
+    series.push({
+      name: type,
+      value: count,
+      color: getTypeColor(type)
+    })
+  })
+  return series.length ? series : buildEmptySubjectSeries()
 })
 
 const completionSeries = computed(() => {
@@ -142,15 +180,6 @@ const avgDailyTime = computed(() => {
 const completionRate = computed(() => {
   return stats.value.completion_rate || 0
 })
-
-const translateType = (value = '') => {
-  const map = {
-    pomodoro: '番茄钟',
-    study: '学习',
-    break: '休息'
-  }
-  return map[value] || value || '其他'
-}
 
 const loadStats = async () => {
   loading.value = true
@@ -295,7 +324,7 @@ const renderSubjectChart = () => {
     },
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c}小时 ({d}%)'
+      formatter: '{a} <br/>{b}: {c}个任务 ({d}%)'
     },
     legend: {
       orient: 'vertical',
@@ -307,7 +336,7 @@ const renderSubjectChart = () => {
     },
     series: [
       {
-        name: '学习科目',
+        name: '任务类型',
         type: 'pie',
         radius: ['40%', '70%'],
         center: ['60%', '50%'],
@@ -415,6 +444,15 @@ onUnmounted(() => {
 watch(activeChart, () => {
   renderChart()
 })
+watch(
+  () => props.tasks,
+  () => {
+    if (activeChart.value === 'subject') {
+      renderSubjectChart()
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>
